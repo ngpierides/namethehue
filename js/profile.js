@@ -55,6 +55,13 @@ export class Profile {
     const initial = (heading[0] || '?').toUpperCase();
     // Show the email as a subtitle only when we also have a name to headline.
     const sub = name && email ? escapeHtml(email) : '✓ Synced to the cloud';
+    // Admin-only shortcut to the live stats dashboard. Gated on the same
+    // server-controlled role that stats.html itself re-checks (app_metadata is
+    // only settable via service-role SQL, so users can't grant themselves this).
+    const isAdmin = session.user.app_metadata?.role === 'admin';
+    const adminLink = isAdmin
+      ? `<a class="btn btn--wide profile-admin" href="stats.html">📊 Live stats dashboard</a>`
+      : '';
     this.body.innerHTML = `
       <div class="profile-account">
         <div class="profile-avatar">${escapeHtml(initial)}</div>
@@ -65,6 +72,7 @@ export class Profile {
       </div>
       <p class="profile-hint">Change your display name in Settings.</p>
       ${statsGrid()}
+      ${adminLink}
       <button id="signout-btn" class="btn btn--wide">Log out</button>`;
 
     this.body.querySelector('#signout-btn').addEventListener('click', async (e) => {

@@ -499,6 +499,14 @@ body {
   width: 100%;
   margin-top: 16px;
 }
+/* Admin-only stats link, styled as a button (it's an <a>, so it needs the
+   block/centered/no-underline bits a <button> gets for free). */
+.profile-admin {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
 .auth-form {
   display: flex;
   flex-direction: column;

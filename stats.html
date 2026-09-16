@@ -197,17 +197,39 @@
         el.innerHTML = msg;
       }
 
-      // Verify the viewer is the admin before revealing anything; bounce home otherwise.
+      const reveal = () => { document.body.style.visibility = 'visible'; };
+
+      // Verify the viewer is an admin before revealing anything; bounce home otherwise.
+      // Add ?debug to the URL to SEE the auth state instead of being redirected.
       async function boot() {
+        const debug = new URLSearchParams(location.search).has('debug');
         const client = await getSupabaseClient();
-        if (!client) { location.replace(HOME); return; } // Supabase not configured
-        let user = null;
-        try { ({ data: { user } } = await client.auth.getUser()); } catch { /* no session */ }
-        if (!user || user.app_metadata?.role !== 'admin') {
-          location.replace(HOME); // not an admin account → back to the game
+        if (!client) {
+          if (debug) { reveal(); showSetup('<strong>Debug:</strong> no Supabase client — is <code>js/supabase-config.js</code> filled in?'); return; }
+          location.replace(HOME); return;
+        }
+        let user = null, err = null;
+        try { ({ data: { user } } = await client.auth.getUser()); } catch (e) { err = e; }
+        const role = user?.app_metadata?.role;
+        const ok = !!user && role === 'admin';
+
+        if (debug) {
+          reveal();
+          showSetup(
+            `<strong>Debug — admin gate</strong><br>` +
+            `signed in: <code>${!!user}</code><br>` +
+            `email: <code>${user?.email || '—'}</code><br>` +
+            `app_metadata: <code>${JSON.stringify(user?.app_metadata || null)}</code><br>` +
+            `role seen: <code>${role ?? '—'}</code><br>` +
+            `verdict: <code>${ok ? 'PASS ✅ (admin)' : 'FAIL ❌ (would redirect)'}</code>` +
+            (err ? `<br>getUser error: <code>${err.message}</code>` : '')
+          );
+          if (ok) load(client);
           return;
         }
-        document.body.style.visibility = 'visible'; // reveal only for the admin
+
+        if (!ok) { location.replace(HOME); return; } // not an admin → back to the game
+        reveal();
         load(client);
         setInterval(() => load(client), 60000);
       }

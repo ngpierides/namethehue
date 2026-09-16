@@ -6,6 +6,7 @@
 import { CONFIG } from './config.js';
 import { luminance } from './color.js';
 import { recordResult } from './stats.js';
+import { logGameCompleted } from './analytics.js';
 import { attachColorField } from './colorfield.js';
 
 export class UI {
@@ -47,7 +48,7 @@ export class UI {
     if (this.game.isOver) this._record();
   }
 
-  _record() {
+  _record(fresh = false) {
     if (this.opts.practice) return; // practice never touches daily stats
     recordResult(
       this.game.dayNumber,
@@ -56,6 +57,15 @@ export class UI {
       this.game.guessPercents,
       this.game.puzzle.par
     );
+    // One anonymous telemetry row per FRESH solve (never on reload-backfill).
+    if (fresh) {
+      logGameCompleted({
+        day: this.game.dayNumber,
+        guesses: this.game.guessesUsed,
+        par: this.game.puzzle.par,
+        mode: 'grid',
+      });
+    }
   }
 
   _buildGrid() {
@@ -113,7 +123,7 @@ export class UI {
     this.render();
     // A guess that ends the game records the result and shows the modal.
     if (this.game.isOver) {
-      this._record();
+      this._record(true);
       if (this.results) this.results.open({ game: this.game, dayNumber: this.game.dayNumber });
     }
   }
@@ -275,7 +285,7 @@ export class HardUI {
     document.getElementById('grid').hidden = false;
   }
 
-  _record() {
+  _record(fresh = false) {
     if (this.opts.practice) return; // practice never touches daily stats
     recordResult(
       this.game.dayNumber,
@@ -284,6 +294,15 @@ export class HardUI {
       this.game.guessPercents,
       this.game.puzzle.par
     );
+    // One anonymous telemetry row per FRESH solve (never on reload-backfill).
+    if (fresh) {
+      logGameCompleted({
+        day: this.game.dayNumber,
+        guesses: this.game.guessesUsed,
+        par: this.game.puzzle.par,
+        mode: 'hard',
+      });
+    }
   }
 
   _onGuess() {
@@ -291,7 +310,7 @@ export class HardUI {
     if (!result) return;
     this.render();
     if (this.game.isOver) {
-      this._record();
+      this._record(true);
       if (this.results) this.results.open({ game: this.game, dayNumber: this.game.dayNumber });
     }
   }

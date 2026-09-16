@@ -505,5 +505,63 @@ admin users never see **Manage** (they have no Stripe subscription to manage).
 ## Going live later
 
 When you host the game on a real domain, add that domain to **Authentication →
-URL Configuration** (Site URL + Redirect URLs) and to the Google OAuth origins, and
-turn **email confirmation back on**. No code changes needed.
+URL Configuration** (Site URL + Redirect URLs) and turn **email confirmation back
+on**. No code changes needed.
+
+---
+
+## Step 11 — Anonymous gameplay analytics (games played)
+
+Cloudflare Web Analytics counts *visits*, not *games*. To count games played —
+including anonymous players — the app writes one row per completed game to a
+`game_events` table. It's driven by `js/analytics.js` (fire-and-forget; no-ops
+when Supabase isn't configured). Run this once in the **SQL Editor**:
+
+```sql
+create table if not exists public.game_events (
+  id          bigint generated always as identity primary key,
+  created_at  timestamptz not null default now(),
+  day         integer,
+  guesses     integer,
+  par         integer,
+  mode        text check (mode in ('grid','hard')),
+  logged_in   boolean not null default false
+);
+
+alter table public.game_events enable row level security;
+
+-- Anyone (signed in OR anonymous) may INSERT a completed-game row. There is
+-- deliberately NO select/update/delete policy, so the public anon key can write
+-- telemetry but never read or tamper with it. You read it yourself in the
+-- dashboard / SQL editor (the service role bypasses RLS).
+create policy "anyone can log a game" on public.game_events
+  for insert to anon, authenticated
+  with check (true);
+
+create index if not exists game_events_created_idx on public.game_events (created_at);
+create index if not exists game_events_day_idx     on public.game_events (day);
+```
+
+> **Privacy:** no user id, email, or IP is stored — only day / guesses / par /
+> mode and a `logged_in` boolean. It's aggregate gameplay telemetry, not personal
+> data. (The client never reads this table; it's write-only from the browser.)
+
+### Reading it (dashboard → SQL Editor)
+
+```sql
+-- total games played
+select count(*) as total_games from public.game_events;
+
+-- games + average guesses per day
+select day, count(*) as games, round(avg(guesses), 2) as avg_guesses
+from public.game_events group by day order by day;
+
+-- anonymous vs logged-in, and grid vs hard mode
+select logged_in, mode, count(*) from public.game_events group by logged_in, mode;
+
+-- games in the last 24 hours
+select count(*) from public.game_events where created_at > now() - interval '24 hours';
+```
+
+Until you run the migration, the app's insert simply fails silently (swallowed by
+`analytics.js`) — nothing breaks, you just don't collect events yet.

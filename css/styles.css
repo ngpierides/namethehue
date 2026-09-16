@@ -127,6 +127,9 @@ body {
   gap: 12px;
 }
 .wordmark-text {
+  /* This is the page's <h1> (the visible site name); reset the UA heading
+     margin so it sits inline in the wordmark flex row exactly as before. */
+  margin: 0;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 2.5rem;

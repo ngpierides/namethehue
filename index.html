@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Name the Hue</title>
+    <title>Name the Hue — Daily Colour Guessing Game</title>
+    <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <!-- SEO + social share. og:url and og:image must be ABSOLUTE urls pointing at
          the live site (currently https://namethehue.com/). If you host elsewhere,
@@ -41,26 +42,80 @@
     <meta name="twitter:image" content="https://namethehue.com/og-image.png" />
 
     <!-- Structured data (schema.org) — helps Google understand this is a free,
-         browser-based daily game and can earn a richer search result. Keep the
-         urls absolute and in sync with the canonical/OG host above. -->
+         browser-based daily game and can earn a richer search result (incl. an
+         FAQ rich result). Keep the urls absolute and in sync with the
+         canonical/OG host above, and keep the FAQ answers truthful — Google can
+         penalise FAQ markup that doesn't match visible/known site content. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Name the Hue",
-        "url": "https://namethehue.com/",
-        "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
-        "applicationCategory": "GameApplication",
-        "genre": "Puzzle",
-        "operatingSystem": "Any (web browser)",
-        "browserRequirements": "Requires JavaScript.",
-        "inLanguage": "en",
-        "image": "https://namethehue.com/og-image.png",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://namethehue.com/#website",
+            "name": "Name the Hue",
+            "url": "https://namethehue.com/",
+            "inLanguage": "en",
+            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://namethehue.com/#app",
+            "name": "Name the Hue",
+            "url": "https://namethehue.com/",
+            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
+            "applicationCategory": "GameApplication",
+            "genre": "Puzzle",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript.",
+            "inLanguage": "en",
+            "image": "https://namethehue.com/og-image.png",
+            "isPartOf": { "@id": "https://namethehue.com/#website" },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://namethehue.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How do you play Name the Hue?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You're given a colour name and a grid of swatches. Click or tap the swatch you think matches — each guess shows a closeness score, and you aim to solve it at or under the day's par."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Name the Hue free to play?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Name the Hue is a free daily browser game with no download required. An optional Pro tier adds a Hard Mode colour mixer and an archive of past puzzles."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How often are new puzzles released?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A brand-new colour puzzle unlocks every day at midnight, and everyone playing on the same date gets the same colour."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I play Name the Hue with friends?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. You can challenge a friend to a live head-to-head match by sharing a link or a 6-digit room code."
+                }
+              }
+            ]
+          }
+        ]
       }
     </script>
 
@@ -147,7 +202,7 @@
         </div>
         <div class="wordmark">
           <span class="swatch-dots" aria-hidden="true"></span>
-          <span class="wordmark-text">Name the Hue</span>
+          <h1 class="wordmark-text">Name the Hue</h1>
         </div>
         <p class="kicker">A daily colour hunt - match the name to the swatch.</p>
         <div class="masthead-actions">

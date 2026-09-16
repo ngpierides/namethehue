@@ -1,0 +1,184 @@
+// profile.js
+// The profile overlay: sign in / sign up when logged out, or the account +
+// stats summary when logged in. Falls back to a "local only" panel when
+// Supabase isn't configured. Talks to auth.js; renders from stats.js.
+
+import {
+  isConfigured,
+  getSession,
+  signIn,
+  signUp,
+  signOut,
+} from './auth.js';
+import { getPersonalStats } from './stats.js';
+
+export class Profile {
+  constructor() {
+    this.el = document.getElementById('profile');
+    this.body = document.getElementById('profile-body');
+
+    document.getElementById('profile-close').addEventListener('click', () => this.close());
+    this.el.addEventListener('click', (e) => {
+      if (e.target === this.el) this.close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !this.el.hidden) this.close();
+    });
+  }
+
+  open() {
+    this.render(getSession());
+    this.el.hidden = false;
+  }
+
+  close() {
+    this.el.hidden = true;
+  }
+
+  /** Called by auth state changes; only repaints if the modal is open. */
+  refresh(session) {
+    if (!this.el.hidden) this.render(session);
+  }
+
+  render(session) {
+    if (!isConfigured()) this._renderLocalOnly();
+    else if (session) this._renderAccount(session);
+    else this._renderAuthForm();
+  }
+
+  // -- Logged in ------------------------------------------------------------
+  _renderAccount(session) {
+    const meta = session.user.user_metadata || {};
+    const email = session.user.email || '';
+    const name = meta.display_name || meta.full_name || meta.name || '';
+    const heading = name || email || 'Signed in';
+    const initial = (heading[0] || '?').toUpperCase();
+    // Show the email as a subtitle only when we also have a name to headline.
+    const sub = name && email ? escapeHtml(email) : '✓ Synced to the cloud';
+    this.body.innerHTML = `
+      <div class="profile-account">
+        <div class="profile-avatar">${escapeHtml(initial)}</div>
+        <div class="profile-id">
+          <div class="profile-email">${escapeHtml(heading)}</div>
+          <div class="profile-synced">${sub}</div>
+        </div>
+      </div>
+      <p class="profile-hint">Change your display name in Settings.</p>
+      ${statsGrid()}
+      <button id="signout-btn" class="btn btn--wide">Log out</button>`;
+
+    this.body.querySelector('#signout-btn').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      await signOut();
+    });
+  }
+
+  // -- Logged out (Supabase configured) ------------------------------------
+  // Has two modes, toggled in place: 'login' and 'signup'. Sign-up also asks
+  // for a display name, which is stored on the account and shown in the profile.
+  _renderAuthForm() {
+    const signup = this.authMode === 'signup';
+    this.body.innerHTML = `
+      <p class="profile-lead">${
+        signup
+          ? 'Create an account to save your streak and stats across every device.'
+          : 'Log in to save your streak and stats across every device.'
+      }</p>
+      <form id="auth-form" class="auth-form">
+        ${
+          signup
+            ? `<input id="auth-name" class="field" type="text" placeholder="Name"
+                      autocomplete="name" maxlength="40" required />`
+            : ''
+        }
+        <input id="auth-email" class="field" type="email" placeholder="Email"
+               autocomplete="email" required />
+        <input id="auth-pass" class="field" type="password" placeholder="Password"
+               autocomplete="${signup ? 'new-password' : 'current-password'}"
+               minlength="6" required />
+        <button type="submit" class="btn btn--primary btn--wide">
+          ${signup ? 'Create account' : 'Log in'}
+        </button>
+        <p id="auth-msg" class="auth-msg" role="alert"></p>
+        <p class="auth-switch">
+          ${signup ? 'Already have an account?' : 'New to Name the Hue?'}
+          <button type="button" id="auth-toggle" class="linkbtn">
+            ${signup ? 'Log in' : 'Create account'}
+          </button>
+        </p>
+      </form>`;
+
+    const q = (sel) => this.body.querySelector(sel);
+    const msg = q('#auth-msg');
+    const email = () => q('#auth-email').value.trim();
+    const pass = () => q('#auth-pass').value;
+    const name = () => q('#auth-name')?.value.trim() || '';
+
+    const run = async (fn, working) => {
+      msg.className = 'auth-msg';
+      msg.textContent = working;
+      try {
+        return await fn();
+      } catch (err) {
+        msg.className = 'auth-msg auth-msg--error';
+        msg.textContent = err?.message || 'Something went wrong.';
+      }
+    };
+
+    q('#auth-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (signup) {
+        run(async () => {
+          const { needsConfirmation } = await signUp(email(), pass(), name());
+          if (needsConfirmation) {
+            msg.className = 'auth-msg auth-msg--ok';
+            msg.textContent = `Thanks, ${name() || 'there'}! Check your email to confirm, then log in.`;
+          }
+        }, 'Creating account…');
+      } else {
+        run(() => signIn(email(), pass()), 'Logging in…');
+      }
+    });
+
+    q('#auth-toggle').addEventListener('click', () => {
+      this.authMode = signup ? 'login' : 'signup';
+      this._renderAuthForm();
+    });
+  }
+
+  // -- Supabase not set up --------------------------------------------------
+  _renderLocalOnly() {
+    this.body.innerHTML = `
+      <div class="profile-note">
+        <strong>Playing as a guest.</strong>
+        Your stats are saved on <em>this device only</em>. To create an account and
+        sync across devices, add your Supabase keys in
+        <code>js/supabase-config.js</code> - see the README's “Cloud login” section.
+      </div>
+      ${statsGrid()}`;
+  }
+}
+
+// ---- helpers ---------------------------------------------------------------
+
+function statsGrid() {
+  const s = getPersonalStats();
+  const cell = (n, cap) => `<div class="stat"><span class="stat-num">${n}</span><span class="stat-cap">${cap}</span></div>`;
+  const accuracy = s.avgAccuracy == null ? '-' : `${s.avgAccuracy}%`;
+  const avgGuesses = s.avgGuesses == null ? '-' : s.avgGuesses;
+  return `
+    <h3 class="modal-h">Your statistics</h3>
+    <div class="stats-grid">
+      ${cell(s.played, 'Played')}
+      ${cell(avgGuesses, 'Avg guesses')}
+      ${cell(accuracy, 'Avg accuracy')}
+      ${cell(s.curStreak, 'Streak')}
+      ${cell(s.maxStreak, 'Max streak')}
+    </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}

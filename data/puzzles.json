@@ -1,0 +1,7 @@
+{
+  "_comment": "OPTIONAL per-day overrides. The game runs fine without any entries here — by default it auto-picks a colour from data/colors.json for each day. Add an entry only when you want to HAND-PICK the colour for a specific day. The key is the day number (Day #1 is the 'epoch' date in js/config.js). 'name' is what the player sees; 'hex' is the colour they must find. Example below is commented-out style: to use it, add real entries like the ones shown.",
+  "_example": {
+    "1": { "name": "sunshine yellow", "hex": "#fffd37" },
+    "7": { "name": "deep teal", "hex": "#00555a" }
+  }
+}

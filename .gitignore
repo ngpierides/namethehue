@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Supabase CLI scratch state (project ref, org id, pooler URL) — not needed in the repo
+supabase/.temp/
+
+# Local env / secret files — never commit these
+.env
+.env.*
+*.pem
+*.key
+
+# Editor noise
+.vscode/
+.idea/

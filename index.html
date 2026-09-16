@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Name the Hue</title>
+
+    <!-- SEO + social share. og:url and og:image must be ABSOLUTE urls pointing at
+         the live site (currently https://namethehue.com/). If you host elsewhere,
+         find-replace namethehue.com with the real public URL. Most scrapers
+         (iMessage, WhatsApp, Slack, Facebook) need the absolute https image url
+         and won't render a relative path. -->
+    <meta
+      name="description"
+      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+    />
+    <link rel="canonical" href="https://namethehue.com/" />
+    <meta name="theme-color" content="#c8452f" />
+
+    <!-- Open Graph (Facebook, iMessage, WhatsApp, Slack, LinkedIn, Discord) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Name the Hue" />
+    <meta property="og:title" content="Name the Hue" />
+    <meta
+      property="og:description"
+      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+    />
+    <meta property="og:url" content="https://namethehue.com/" />
+    <meta property="og:image" content="https://namethehue.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Name the Hue — a daily colour hunt" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Name the Hue" />
+    <meta
+      name="twitter:description"
+      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+    />
+    <meta name="twitter:image" content="https://namethehue.com/og-image.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css?v=53" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
+    />
+  </head>
+  <body>
+    <main class="app">
+      <header class="masthead">
+        <div class="corner corner--left">
+          <button id="help-btn" class="icon-btn" type="button" aria-label="How to play">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.6 1-1.6 2.1v.4" />
+              <circle cx="11.5" cy="17.6" r="0.4" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+          <button id="stats-btn" class="icon-btn" type="button" aria-label="Statistics">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" />
+              <rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor" />
+              <rect x="17" y="3" width="4" height="17" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+          <button id="archive-btn" class="icon-btn" type="button" aria-label="Past games archive" hidden>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="4" rx="1" />
+              <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+              <path d="M10 12h4" />
+            </svg>
+          </button>
+        </div>
+        <div class="corner corner--right">
+          <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          <button id="profile-btn" class="icon-btn" type="button" aria-label="Profile">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+            </svg>
+          </button>
+        </div>
+        <div class="wordmark">
+          <span class="swatch-dots" aria-hidden="true"></span>
+          <span class="wordmark-text">Name the Hue</span>
+        </div>
+        <p class="kicker">A daily colour hunt - match the name to the swatch.</p>
+        <div class="masthead-actions">
+          <button id="mp-btn" class="mp-cta" type="button">🎮 Play a friend</button>
+          <button id="practice-btn" class="mp-cta" type="button">🎲 Practice</button>
+        </div>
+      </header>
+
+      <!-- Gallery placard: the colour to find. Past days live in the Archive
+           (Pro); there is no forward navigation - a new colour each day. -->
+      <section class="plate plate--solo">
+        <div class="plate-body">
+          <span class="plate-label">Find this colour</span>
+          <h2 id="target-name" class="target-name">…</h2>
+          <p id="day-label" class="day-label"></p>
+        </div>
+      </section>
+
+      <!-- Practice controls (Pro), shown only while in practice mode. -->
+      <div id="practice-bar" class="practice-bar" hidden>
+        <span class="practice-tag">Practice - doesn't affect your stats</span>
+        <div class="practice-actions">
+          <button id="practice-exit" class="mp-navbtn" type="button">Exit</button>
+          <button id="practice-new" class="share-btn" type="button">🎲 New puzzle</button>
+        </div>
+      </div>
+
+      <section class="meta">
+        <div class="meta-block">
+          <span id="guesses-label" class="meta-label">Guesses left</span>
+          <div id="pips" class="pips" aria-label="Guesses made"></div>
+        </div>
+        <div class="meta-block meta-block--right">
+          <span class="meta-label">Best match</span>
+          <span id="best-score" class="meta-value">-</span>
+        </div>
+      </section>
+
+      <div id="grid" class="grid" aria-label="Colour grid"></div>
+
+      <!-- Hard Mode mixer (Pro): a 2D colour field + grey ramp, shown instead
+           of the grid. Pick from anywhere in the spectrum. -->
+      <section id="hard" class="hard" hidden>
+        <div class="hard-field-wrap">
+          <canvas id="hard-field" class="hard-field" width="360" height="220" aria-label="Colour field - pick a colour"></canvas>
+          <div id="hard-marker" class="hard-marker" hidden></div>
+        </div>
+        <canvas id="hard-gray" class="hard-gray" width="360" height="22" aria-label="Greys"></canvas>
+        <div class="hard-bottom">
+          <div class="hard-pickbox">
+            <div id="hard-preview" class="hard-circle"></div>
+            <span id="hard-hex" class="hard-hex">#808080</span>
+          </div>
+          <button id="hard-guess" class="share-btn hard-guess" type="button">Guess this colour</button>
+        </div>
+      </section>
+
+      <section id="message" class="message" hidden></section>
+
+      <section class="guesses">
+        <ul id="guess-list" class="guess-list"></ul>
+      </section>
+
+      <footer class="footer">
+        Colour names from the
+        <a href="https://xkcd.com/color/rgb/" target="_blank" rel="noopener">XKCD colour survey</a>
+        · public domain (CC0)
+        <br />
+        <a href="terms.html">Terms</a> ·
+        <a href="privacy.html">Privacy</a> ·
+        <a href="terms.html#refunds">Refunds</a>
+      </footer>
+    </main>
+
+    <!-- Profile / login overlay, opened by the person button. -->
+    <div id="profile" class="modal" hidden>
+      <div class="modal-card modal-card--profile" role="dialog" aria-modal="true" aria-label="Profile">
+        <button id="profile-close" class="modal-close" type="button" aria-label="Close">✕</button>
+        <h3 class="modal-h">Profile</h3>
+        <div id="profile-body"></div>
+      </div>
+    </div>
+
+    <!-- Settings overlay, opened by the cog button. -->
+    <div id="settings" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="Settings">
+        <button id="settings-close" class="modal-close" type="button" aria-label="Close">✕</button>
+        <h3 class="modal-h">Settings</h3>
+        <div id="settings-body"></div>
+      </div>
+    </div>
+
+    <!-- How-to-play overlay, opened by the ? button. -->
+    <div id="help" class="modal" hidden>
+      <div class="modal-card modal-card--help" role="dialog" aria-modal="true" aria-label="How to play">
+        <button id="help-close" class="modal-close" type="button" aria-label="Close">✕</button>
+        <h3 class="modal-h">How to play</h3>
+        <ul class="help-list">
+          <li><strong>Click or tap</strong> a swatch to guess it - you'll get a closeness score (%).</li>
+          <li><strong>Right-click</strong> (or <strong>long-press</strong> on a phone) a swatch to rule it out; it darkens with a red ✕. Tap again to un-flag. It's free.</li>
+          <li><strong>Guesses are unlimited</strong> - there's no losing. Aim to solve at or under the day's <strong>par</strong>; solve it first try for a hole in one.</li>
+          <li>Closeness uses <em>ΔE2000</em> - how different two colours look to the eye. 100% is the answer.</li>
+          <li>Everyone on the same date gets the same colour - a new one unlocks each day at midnight (see the timer for your reset).</li>
+          <li><strong>🎮 Play a friend</strong> to challenge someone to a live head-to-head - share a link or a 6-digit code.</li>
+          <li>A fresh colour unlocks each day - no skipping ahead. <strong>Name the Hue Pro</strong> (in Settings) adds a <strong>Hard Mode</strong> where you mix the colour yourself, plus an <strong>archive</strong> of past days.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Results overlay (NYT-Wordle style). Hidden until the game ends or the
+         stats icon is tapped. -->
+    <div id="results" class="modal" hidden>
+      <div id="results-card" class="modal-card" role="dialog" aria-modal="true" aria-label="Results">
+        <button id="results-close" class="modal-close" type="button" aria-label="Close">✕</button>
+
+        <div id="results-outcome" class="results-outcome" hidden></div>
+
+        <button id="results-nudge" class="nudge" type="button" hidden>
+          <span class="nudge-flame" aria-hidden="true">🔥</span>
+          <span class="nudge-text">
+            <strong>Log in to save your streak</strong>
+            <span class="nudge-sub">Keep your stats across every device.</span>
+          </span>
+          <span class="nudge-cta" aria-hidden="true">›</span>
+        </button>
+
+        <h3 class="modal-h">Statistics</h3>
+        <div class="stats-grid">
+          <div class="stat"><span id="stat-played" class="stat-num">0</span><span class="stat-cap">Played</span></div>
+          <div class="stat"><span id="stat-avgguesses" class="stat-num">-</span><span class="stat-cap">Avg guesses</span></div>
+          <div class="stat"><span id="stat-accuracy" class="stat-num">-</span><span class="stat-cap">Avg accuracy</span></div>
+          <div class="stat"><span id="stat-streak" class="stat-num">0</span><span class="stat-cap">Streak</span></div>
+          <div class="stat"><span id="stat-maxstreak" class="stat-num">0</span><span class="stat-cap">Max streak</span></div>
+        </div>
+
+        <h3 class="modal-h">Your guess distribution</h3>
+        <div id="dist-personal" class="dist"></div>
+
+        <a id="coffee-link" class="coffee" href="https://buymeacoffee.com/nickreides"
+           target="_blank" rel="noopener" hidden>
+          <span class="coffee-cup" aria-hidden="true">☕</span>
+          <span class="coffee-text">
+            <strong>Enjoying the daily colour?</strong>
+            <span class="coffee-sub">Buy me a coffee to keep Name the Hue going.</span>
+          </span>
+          <span class="coffee-cta" aria-hidden="true">›</span>
+        </a>
+
+        <button id="mp-invite-btn" class="mp-cta mp-cta--block" type="button">🎮 Challenge a friend to this</button>
+
+        <div class="modal-foot">
+          <div class="countdown">
+            <span class="countdown-cap">Next colour</span>
+            <span id="countdown" class="countdown-time">--:--:--</span>
+            <span id="countdown-note" class="countdown-note"></span>
+          </div>
+          <button id="share-btn" class="share-btn" type="button" hidden>Share</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multiplayer: a full page (hides the daily game while active) with two
+         subpages - the lobby (share a link) and the live snake-draft match. -->
+    <section id="mp" class="mp-page" hidden aria-label="Multiplayer">
+      <div class="mp-shell">
+        <header class="mp-topbar">
+          <button id="mp-back" class="mp-navbtn" type="button">‹ Name the Hue</button>
+          <span id="mp-topbar-title" class="mp-topbar-title">Multiplayer</span>
+          <span class="mp-navbtn mp-navbtn--ghost" aria-hidden="true"></span>
+        </header>
+
+        <!-- Subpage: name step (signed-out players, shown before lobby/match) -->
+        <div id="mp-namegate" class="mp-subpage" hidden>
+          <div class="mp-hero">
+            <span class="mp-hero-emoji" aria-hidden="true">👋</span>
+            <h2 class="mp-h1">What should we call you?</h2>
+            <p class="mp-hero-sub">This is the name your opponent sees. Or log in to use your account name and keep your stats.</p>
+          </div>
+          <div class="mp-panel">
+            <div class="mp-linkrow">
+              <input id="mp-name-input" class="mp-link mp-link--editable" type="text" maxlength="20"
+                     placeholder="Your name" aria-label="Your name" autocomplete="off" />
+              <button id="mp-name-continue" class="share-btn" type="button">Continue</button>
+            </div>
+            <p id="mp-name-error" class="mp-join-error" hidden>Please enter a name.</p>
+          </div>
+        </div>
+
+        <!-- Subpage: lobby -->
+        <div id="mp-lobby" class="mp-subpage">
+          <div class="mp-hero">
+            <span class="mp-hero-emoji" aria-hidden="true">🎮</span>
+            <h2 class="mp-h1">Challenge a friend</h2>
+            <p class="mp-hero-sub">Snake-draft the swatches head to head. First to the colour wins the round - then it rolls to a brand-new colour, over and over.</p>
+          </div>
+
+          <div class="mp-panel">
+            <span class="mp-panel-label">Invite a friend</span>
+            <button id="mp-code" class="mp-code" type="button" title="Tap to copy the code" aria-label="Room code - tap to copy">------</button>
+            <div class="mp-linkrow">
+              <input id="mp-link" class="mp-link" type="text" readonly aria-label="Your room link" />
+              <button id="mp-copy" class="share-btn" type="button">Copy link</button>
+            </div>
+            <p id="mp-lobby-status" class="mp-lobby-status">Setting up…</p>
+          </div>
+
+          <div class="mp-or"><span>or</span></div>
+
+          <div class="mp-panel">
+            <span class="mp-panel-label">Join a game</span>
+            <div class="mp-linkrow">
+              <input id="mp-join-input" class="mp-link mp-link--editable" type="text"
+                     placeholder="Paste a link or enter a code" aria-label="Room link or code"
+                     autocapitalize="characters" autocomplete="off" spellcheck="false" />
+              <button id="mp-join-btn" class="share-btn" type="button">Join</button>
+            </div>
+            <p id="mp-join-error" class="mp-join-error" hidden>That doesn’t look like a valid room code.</p>
+          </div>
+        </div>
+
+        <!-- Subpage: live match -->
+        <div id="mp-game" class="mp-subpage" hidden>
+          <div class="mp-scoreboard">
+            <div class="mp-player mp-player--me">
+              <span id="mp-name-me" class="mp-pname">You</span>
+              <span id="mp-score-me" class="mp-pscore">0</span>
+            </div>
+            <span class="mp-vs">vs</span>
+            <div class="mp-player mp-player--them">
+              <span id="mp-name-them" class="mp-pname">Friend</span>
+              <span id="mp-score-them" class="mp-pscore">0</span>
+            </div>
+          </div>
+
+          <div class="mp-target">
+            <span class="plate-label">Find this colour · Round <span id="mp-round">1</span></span>
+            <h2 id="mp-target-name" class="target-name">…</h2>
+          </div>
+
+          <p id="mp-turn" class="mp-turn">…</p>
+          <div id="mp-grid" class="grid mp-grid" aria-label="Multiplayer colour grid"></div>
+
+          <!-- Hard-Mode board: mix 5 colours, closest % wins the round. -->
+          <div id="mp-hard" class="mp-hard" hidden>
+            <div class="hard-field-wrap">
+              <canvas id="mp-hard-field" class="hard-field" width="360" height="190" aria-label="Colour field - pick a colour"></canvas>
+              <div id="mp-hard-marker" class="hard-marker" hidden></div>
+            </div>
+            <canvas id="mp-hard-gray" class="hard-gray" width="360" height="18" aria-label="Greys"></canvas>
+            <div class="hard-bottom">
+              <div class="hard-pickbox">
+                <div id="mp-hard-circle" class="hard-circle"></div>
+                <span id="mp-hard-hex" class="hard-hex">#808080</span>
+              </div>
+              <button id="mp-hard-guess" class="share-btn hard-guess" type="button">Guess</button>
+            </div>
+          </div>
+
+          <div id="mp-roundover" class="mp-roundover" hidden>
+            <span id="mp-roundover-text" class="mp-roundover-text"></span>
+            <div class="mp-roundover-actions">
+              <button id="mp-share" class="mp-navbtn" type="button" hidden>Share result</button>
+              <button id="mp-rematch" class="mp-navbtn" type="button" hidden>Rematch</button>
+              <button id="mp-next" class="share-btn" type="button">Next round →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subpage: opponent dropped out -->
+        <div id="mp-disconnect" class="mp-subpage" hidden>
+          <div class="mp-hero">
+            <span class="mp-hero-emoji" aria-hidden="true">🔌</span>
+            <h2 class="mp-h1">Friend disconnected</h2>
+            <p id="mp-disconnect-sub" class="mp-hero-sub">Waiting for them to rejoin…</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Past-games archive (Pro). Lists days 1..today; picking one loads it. -->
+    <div id="archive" class="modal" hidden>
+      <div class="modal-card modal-card--archive" role="dialog" aria-modal="true" aria-label="Past games">
+        <button id="archive-close" class="modal-close" type="button" aria-label="Close">✕</button>
+        <h3 class="modal-h">Past games</h3>
+        <div id="archive-list" class="archive-list"></div>
+      </div>
+    </div>
+
+    <!-- Shared "Get Name the Hue Pro" upsell, reused by the archive + practice gates. -->
+    <div id="pro-upsell" class="modal" hidden>
+      <div class="modal-card modal-card--upsell" role="dialog" aria-modal="true" aria-label="Name the Hue Pro">
+        <button id="pro-upsell-close" class="modal-close" type="button" aria-label="Close">✕</button>
+        <div class="archive-upsell">
+          <span class="archive-upsell-emoji" aria-hidden="true">✨</span>
+          <h3 class="modal-h">Name the Hue Pro</h3>
+          <p class="archive-upsell-text">Unlock <strong>Hard Mode</strong>, the <strong>past-games archive</strong>, and unlimited <strong>Practice</strong> - play as many colours as you like.</p>
+          <p class="pro-upsell-price" id="pro-upsell-price" hidden></p>
+          <button id="pro-upsell-go" class="share-btn" type="button">Get Name the Hue Pro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- One central place to cache-bust the module graph: bump ?v=N here and in
+         the stylesheet link above when you want browsers to fetch fresh code. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "/js/main.js": "/js/main.js?v=53",
+          "/js/config.js": "/js/config.js?v=53",
+          "/js/color.js": "/js/color.js?v=53",
+          "/js/rng.js": "/js/rng.js?v=53",
+          "/js/puzzle.js": "/js/puzzle.js?v=53",
+          "/js/storage.js": "/js/storage.js?v=53",
+          "/js/stats.js": "/js/stats.js?v=53",
+          "/js/game.js": "/js/game.js?v=53",
+          "/js/ui.js": "/js/ui.js?v=53",
+          "/js/colorfield.js": "/js/colorfield.js?v=53",
+          "/js/results.js": "/js/results.js?v=53",
+          "/js/auth.js": "/js/auth.js?v=53",
+          "/js/profile.js": "/js/profile.js?v=53",
+          "/js/settings.js": "/js/settings.js?v=53",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=53",
+          "/js/pro.js": "/js/pro.js?v=53",
+          "/js/archive.js": "/js/archive.js?v=53",
+          "/js/proupsell.js": "/js/proupsell.js?v=53",
+          "/js/billing.js": "/js/billing.js?v=53",
+          "/js/pricing.js": "/js/pricing.js?v=53",
+          "/js/toast.js": "/js/toast.js?v=53",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=53"
+        }
+      }
+    </script>
+    <script type="module">
+      import '/js/main.js';
+    </script>
+  </body>
+</html>

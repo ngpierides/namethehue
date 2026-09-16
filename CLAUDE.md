@@ -1,0 +1,76 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+Name the Hue — a daily colour-guessing web game (guess which swatch matches a colour name). It is a **zero-build static site**: plain HTML/CSS + ES modules, no bundler, no framework, no `package.json`, no tests. Cloud login/stats sync via Supabase is optional and degrades gracefully to local-only.
+
+## Running it
+
+```bash
+python3 -m http.server 8000   # then open http://localhost:8000
+```
+
+Any static file server works (there's also a `.claude/launch.json` named `colordle`). Append `?day=N` to the URL to jump to / preview any day.
+
+## ⚠️ Cache-busting: bump the version after editing JS or CSS
+
+Modules are loaded through an **import map** in `index.html` that appends `?v=N` to every `/js/*.js`, and the stylesheet link carries the same `?v=N`. `js/*` files themselves import with clean specifiers (no `?v=`) — the import map is the single place versions live. Browsers (and the in-app preview especially) cache aggressively by URL, so **after changing any JS or CSS you must bump the version** or stale code is served:
+
+```bash
+sed -i '' 's/?v=13/?v=14/g' index.html   # bump N -> N+1 everywhere (14 occurrences)
+```
+
+This is the #1 recurring gotcha. If a change "isn't taking effect," it's almost always a missed version bump (or the user needs a hard refresh, Cmd/Ctrl+Shift+R).
+
+## Architecture (the big picture)
+
+Everything is deterministic and client-side; there is no game server. A day's puzzle and grid are derived from a **day number** via seeded RNG, so every player on the same date gets the identical puzzle with no coordination.
+
+Data flow for a day: `main.js` → `puzzle.buildPuzzle(day)` → `new Game()` → `new UI()` renders it. `main.js`'s single `show(day)` is the one re-render path — cloud-sync repaint, the archive, and Pro mode-switching all call it. There are **no prev/next arrows**: days run 1..today only (never the future), and past days live in the **Archive** (a Pro perk). In Pro **Hard Mode**, `show()` builds a `HardGame`/`HardUI` pair instead of `Game`/`UI`.
+
+Module responsibilities:
+
+- **config.js** — the single tuning surface (`CONFIG`: grid size, `distCap`, `hardDistractors`, `closenessMaxDeltaE`, `epoch`, `timeZone`). Guesses are **unlimited — there is no fail state** ("Globle" model); the goal is to solve at or under each day's **par** (see puzzle.js). `distCap` is how many buckets the results distribution uses (last is "N+"). `timeZone` is `'local'` (each player's own midnight, like Wordle) or an IANA zone (one global cutoff); `resolvedTimeZone()` maps that for `Intl`.
+- **rng.js** — seeded PRNG (mulberry32) + string hash. This is what makes the game deterministic/daily; anything that must be identical for all players is seeded here.
+- **color.js** — colour maths. Closeness % comes from **CIEDE2000 (ΔE2000)** in CIELAB, mapped to 0–100 via `closenessMaxDeltaE`.
+- **puzzle.js** — day-number math (from `CONFIG.timeZone`) and `buildPuzzle`: picks the target (a fixed shuffled "deck" walked by day number, overridable via `data/puzzles.json`), builds the grid (target + N nearest-ΔE "hard" distractors + random fillers), and computes a `difficulty` score plus a **`par`** (the guess count to beat, 2–6, derived from difficulty). Also `buildRandomPuzzle(seedStr, dataset, excludeHex)` — the same grid assembly seeded by an arbitrary string (not a day) with a colour excluded; multiplayer uses it so both players derive an identical grid from just the room seed, and passes today's target hex so a match never reuses the day's colour.
+- **Practice mode** (Pro) — the "🎲 Practice" masthead button runs `buildRandomPuzzle` through the normal `Game`/`UI` (or `HardGame`/`HardUI`) with a `practice` flag: **no persistence, no stats, no results modal** (ephemeral). `main.js` owns it (`showPractice`/`mount`); a `#practice-bar` offers New puzzle / Exit; non-Pro click opens Settings (upsell). Practice puzzles carry a `par` like any other.
+- **game.js** — the rules engine, DOM-agnostic. `Game` (grid) loads per-day board state; **if none exists but synced stats say the day was finished, it reconstructs a locked "done" state** (this is how played days show as completed on other devices). Also `HardGame` — the Pro "mix the colour" mode: same public shape as `Game` (so results/stats/share work unchanged) but a guess is an arbitrary hex; solved at ΔE ≤ `HARD_WIN_DE` (5); saved under storage mode `'hard'` and it deliberately does **not** reconstruct from synced stats (Hard Mode is played independently even on a day already solved in the grid).
+- **ui.js** — all grid/guess DOM + click handling. `UI`: left-click/tap guesses, right-click/long-press flags (Minesweeper-style). `HardUI`: the Hard-Mode board — a **2D colour field** (`#hard`) plus a grey ramp, a draggable marker, and a large circle showing the current pick; the picker itself is `colorfield.js` (see below). Replaces the grid; `init()` hides the grid and `destroy()` restores it. Records results + opens the results modal on finish.
+- **results.js / profile.js** — two of the main modals (stats/share + login/account). `profile.js` also holds the display-name editor.
+- **settings.js** — the Settings modal, opened by the masthead **cog** (left of the profile button). Sections: **Appearance** (Theme — System/Light/Dark, and Reduce motion), **Name the Hue Pro** (Pro mode + Hard mode; toggling notifies the app via `onProChange`), and **Data** (Reset progress — a two-tap confirm that clears `colordle:stats` + `colordle:day:*` only, keeping Pro/name/prefs). Theme + reduce-motion persist in localStorage (`colordle:theme`, `colordle:reducemotion`) and are applied by `applyStoredPrefs()`, called at the top of `main()` so they take effect before first paint. The archive upsell's "Get Name the Hue Pro" opens this.
+  - **Dark theme** is pure CSS: the same `:root` tokens redefined under `:root[data-theme='dark']` and a `prefers-color-scheme: dark` block (for System). `applyTheme` sets/removes `data-theme` on `<html>`. Because every component reads the tokens, no component CSS changes.
+- **stats.js** — the player's history and the **cloud-sync seams**. See storage model below.
+- **storage.js** — per-day board persistence (localStorage), separate from stats. Mode-aware: `loadState(day, mode)`/`saveState(day, state, mode)` — `'hard'` gets a `:hard` key suffix so a day's Hard-Mode board is independent of its grid board.
+- **pro.js** — the optional **Pro tier** (a free localStorage toggle for now, built as an entitlement seam like auth's `isConfigured()` so it can later require login/payment without callers changing). `isPro()` / `isHardMode()` / `setPro()` / `setHardMode()` / `onProChange()`. Pro unlocks Hard Mode + the Archive; free players get today's grid only.
+- **colorfield.js** — the reusable 2D colour picker (canvas painted x→hue / y→lightness by `fieldColor`, a grey ramp `grayColor` for neutrals, a draggable marker, a big preview circle). Painting and picking both call `fieldColor`, so display and selection can't drift. `attachColorField(refs)` returns a per-canvas cached `ColorField` (WeakMap-keyed, so re-renders don't stack duplicate pointer listeners); `.get()` / `.set(hex, markerXY)` / `.setLocked(bool)`. Shared by the daily Hard Mode (`ui.js`) and Hard-Mode multiplayer (`multiplayer.js`).
+- **archive.js** — the **past-games Archive** modal (`#archive`): the button is always visible, but browsing/replaying is a Pro perk — `open()` shows the day list (days 1..today, newest first, each with its result; picking one calls back into `show(day)`) for Pro, or an **upsell** (with a "Get Name the Hue Pro" button → `onGoPro`, which opens the profile) for everyone else. Replaces the old arrows.
+- **auth.js** — optional Supabase integration (see below). Also exports `getSupabaseClient()` — a single shared, lazily-created client reused by multiplayer so there's only ever one realtime connection.
+- **multiplayer.js** — the online "challenge a friend" mode. It's a **full page** (not a modal): while active it hides `.app` and shows the `#mp` section, with two **subpages** — the *lobby* (two panels: *Invite a friend* shows the big tap-to-copy 6-char room code **and** the `?room=CODE` link, *Join a game* takes a pasted link **or** a bare code via `parseRoomCode`) and the *live match* — plus a top bar whose title switches ("Multiplayer" ↔ "Live match") and a "‹ Name the Hue" back button. Routing lives in the URL (`?room=CODE#mp`); `main.js`'s `syncRoute` (on `popstate` + first load) means a shared link deep-links straight into a match and the browser back button steps out of multiplayer. Gameplay has **two modes**, fixed by the host at match creation from `isHardMode()` (`match.mode`): **grid** — snake-draft swatches, first to the target wins the round; or **hard** — both players mix `HARD_GUESSES` (5) colours with the shared `colorfield.js` picker (`#mp-hard`) and the higher best-% wins the round (tie = draw), broadcast via a `hardpick` event. Either way, **first to `WIN_TARGET` (5) rounds wins the match** (trophy banner + Share result + Rematch). Rounds cycle with a fresh random colour (never the day's). A **Rematch** button (either player) resets the score to round 1; a presence-leave shows a **"friend disconnected"** subpage (`#mp-disconnect`) — the host keeps the room open for a rejoin, the guest is told the host left. No tables/SQL/login — the channel is ephemeral and the anon key is enough; the grid never travels (both clients rebuild it from the room seed via `buildRandomPuzzle`). The **host is authoritative**: it owns the match state, applies every pick, and re-broadcasts state on presence-join so refreshes/reconnects recover. Player id lives in `sessionStorage` (unique per tab, survives a same-tab refresh). **Names:** logged-in players use their account display name; signed-out players are asked for a name on a *name-step* subpage (`#mp-namegate`) shown before hosting/joining, saved to `localStorage` under `colordle:name` (so it's asked once) — there is no auto "Guest" name. Entry points: the "🎮 Play a friend" button in the masthead and the "🎮 Challenge a friend" button in the results modal.
+- **main.js** — bootstrap + wiring (the `show(day)` re-render, today-clamp, mode selection via `isHardMode()`, Pro/archive gating via `onProChange`, modal buttons, `initAuth`, multiplayer buttons + `?room=` auto-join). `?day=N` still works for testing but is clamped to ≤ today and only honoured for Pro.
+
+## Two storage layers (important)
+
+1. **`colordle:stats`** — the history blob `{ days: { [day]: { won, guesses, pcts, par } } }` (`par` is recorded from each solve so the Pro **Advanced stats** — beat-par record, best solve, a last-5-weeks heatmap via `getAdvancedStats()` + `getDayResult()` — can be derived; older entries without `par` just don't count toward the par metric). This is the **source of truth** that syncs to the cloud, drives Played/avg-guesses/streaks/avg-accuracy, and lets other devices reconstruct which days are done. There's **no fail state**, so `won` just means "completed" (every finished day counts; streaks are runs of consecutive completed days). `stats.js` exposes the sync seams: `getStatsBlob()`, `mergeIntoLocal()` (a win beats a loss, fewer guesses wins, percentages preserved), `getDayResult()`, `onStatsChange()`.
+2. **`colordle:day:N`** — the detailed board for one day (the actual guesses, eliminations, status), local-only. This is *not* synced, so the exact per-guess board does not travel across devices — only the outcome does.
+
+## Supabase (optional cloud sync)
+
+- Entirely optional: `js/supabase-config.js` holds `SUPABASE_URL` / `SUPABASE_ANON_KEY`. While they're the `YOUR_…` placeholders, `auth.js` no-ops and the SDK is never even loaded (lazy-loaded from a CDN only when configured). Never break the local-only path.
+- On login: **pull the cloud row → `mergeIntoLocal` → push back**. The pushed row is the `days` blob **plus readable summary columns** (`name`, `email`, `games_played`, `wins`, `current_streak`, `max_streak`, `avg_accuracy`). (The legacy `win_pct` column still exists in the table but is no longer written — it's dead; a future migration could swap it for `avg_guesses`.)
+- **Schema changes require a SQL migration the user runs in Supabase** (the app can't alter the DB). The table (`player_stats`), its RLS policies, and any `ALTER TABLE` migrations live in `SUPABASE_SETUP.md` — update that file whenever the pushed columns change.
+- Auth actions live in `auth.js` (`signIn`, `signUp` with a display-name in user metadata, `signOut`, `updateDisplayName`). Login is **email + password only** — there is no Google/OAuth sign-in (the login UI in `profile.js` renders just email/password). Building the login UI is fine; do not enter real credentials or create accounts during testing.
+
+## Colour data
+
+- `data/colors.json` — master list of 949 colour names (XKCD survey, **public domain / CC0**). Add colours here.
+- `data/puzzles.json` — optional per-day overrides keyed by day number (`{ "42": { "name": "...", "hex": "#rrggbb" } }`); otherwise the day is auto-picked from the master list.
+
+## Conventions
+
+- Every JS module opens with a short comment explaining its role — keep that up when adding files.
+- Keep rules logic (`game.js`/`stats.js`) free of DOM; keep DOM in `ui.js`/`results.js`/`profile.js`.
+- Modals hide via an inline `display:none` + cleared content (not only the `hidden` attribute) so stale content can't leak past cached CSS — follow that pattern for new modals.
+- Any element given an explicit `display` (e.g. `.grid{display:grid}`, `.hard{display:flex}`) will **ignore the `hidden` attribute** (author CSS beats the UA `[hidden]{display:none}`). Add a matching `.thing[hidden]{display:none}` rule when you toggle such an element with `hidden` — see `.grid[hidden]` / `.hard[hidden]`.

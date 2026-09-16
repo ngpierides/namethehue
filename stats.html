@@ -183,9 +183,9 @@
     <script type="module">
       import { getSupabaseClient } from './js/auth.js';
 
-      // Admin gate: only this account may view the dashboard. Set it to the email
-      // you sign into Name the Hue with (must match ADMIN in the SQL function).
-      const ADMIN_EMAIL = 'nickpier07@gmail.com';
+      // Admin gate: any account whose Supabase app_metadata.role = 'admin' may view
+      // this. Grant/revoke admin with the SQL in SUPABASE_SETUP.md (Step 11) — no
+      // code change, works for as many people as you like.
       const HOME = 'index.html'; // where non-admins are redirected
 
       const $ = (id) => document.getElementById(id);
@@ -203,8 +203,8 @@
         if (!client) { location.replace(HOME); return; } // Supabase not configured
         let user = null;
         try { ({ data: { user } } = await client.auth.getUser()); } catch { /* no session */ }
-        if (!user || (user.email || '').toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-          location.replace(HOME); // not signed in as the admin → back to the game
+        if (!user || user.app_metadata?.role !== 'admin') {
+          location.replace(HOME); // not an admin account → back to the game
           return;
         }
         document.body.style.visibility = 'visible'; // reveal only for the admin

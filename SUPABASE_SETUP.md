@@ -582,9 +582,9 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Admin-only: only this account may read stats; everyone else gets an error.
-  -- Change the email to match ADMIN_EMAIL in stats.html.
-  if coalesce(auth.jwt() ->> 'email', '') <> 'nickpier07@gmail.com' then
+  -- Admin-only: any account whose app_metadata.role = 'admin' may read stats.
+  -- Everyone else gets an error. Grant admin with the SQL below.
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'admin' then
     raise exception 'not authorized';
   end if;
 
@@ -617,8 +617,27 @@ revoke execute on function public.get_game_stats() from anon;
 grant execute on function public.get_game_stats() to authenticated;
 ```
 
-> **Admin-only, two layers:** `stats.html` bounces anyone who isn't signed in as
-> `ADMIN_EMAIL` back to the game, and the function above independently rejects any
-> caller whose JWT email isn't the admin — so even a direct API call returns "not
-> authorized". Set the same email in **both** places (stats.html `ADMIN_EMAIL` and
-> the `if` check in this function) to the address you log into the game with.
+> **Admin-only, two layers:** `stats.html` bounces any non-admin account back to
+> the game, and the function above independently rejects any caller without the
+> admin role — so even a direct API call returns "not authorized".
+
+### Granting admin
+
+Make any account an admin (yourself, a teammate — as many as you like) by setting
+its role. Run in the **SQL Editor**:
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+where email = 'you@example.com';   -- the account to promote
+```
+
+`app_metadata` is writable **only** with the service role / SQL editor, never by
+the user, so a player can't self-promote. The person must **sign out and back in**
+afterwards — the role rides in a fresh JWT. To revoke:
+
+```sql
+update auth.users
+set raw_app_meta_data = raw_app_meta_data - 'role'
+where email = 'them@example.com';
+```

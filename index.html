@@ -40,13 +40,37 @@
     />
     <meta name="twitter:image" content="https://namethehue.com/og-image.png" />
 
+    <!-- Structured data (schema.org) — helps Google understand this is a free,
+         browser-based daily game and can earn a richer search result. Keep the
+         urls absolute and in sync with the canonical/OG host above. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Name the Hue",
+        "url": "https://namethehue.com/",
+        "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
+        "applicationCategory": "GameApplication",
+        "genre": "Puzzle",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript.",
+        "inLanguage": "en",
+        "image": "https://namethehue.com/og-image.png",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=54" />
+    <link rel="stylesheet" href="css/styles.css?v=55" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -431,29 +455,29 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=54",
-          "/js/config.js": "/js/config.js?v=54",
-          "/js/color.js": "/js/color.js?v=54",
-          "/js/rng.js": "/js/rng.js?v=54",
-          "/js/puzzle.js": "/js/puzzle.js?v=54",
-          "/js/storage.js": "/js/storage.js?v=54",
-          "/js/stats.js": "/js/stats.js?v=54",
-          "/js/game.js": "/js/game.js?v=54",
-          "/js/ui.js": "/js/ui.js?v=54",
-          "/js/analytics.js": "/js/analytics.js?v=54",
-          "/js/colorfield.js": "/js/colorfield.js?v=54",
-          "/js/results.js": "/js/results.js?v=54",
-          "/js/auth.js": "/js/auth.js?v=54",
-          "/js/profile.js": "/js/profile.js?v=54",
-          "/js/settings.js": "/js/settings.js?v=54",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=54",
-          "/js/pro.js": "/js/pro.js?v=54",
-          "/js/archive.js": "/js/archive.js?v=54",
-          "/js/proupsell.js": "/js/proupsell.js?v=54",
-          "/js/billing.js": "/js/billing.js?v=54",
-          "/js/pricing.js": "/js/pricing.js?v=54",
-          "/js/toast.js": "/js/toast.js?v=54",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=54"
+          "/js/main.js": "/js/main.js?v=55",
+          "/js/config.js": "/js/config.js?v=55",
+          "/js/color.js": "/js/color.js?v=55",
+          "/js/rng.js": "/js/rng.js?v=55",
+          "/js/puzzle.js": "/js/puzzle.js?v=55",
+          "/js/storage.js": "/js/storage.js?v=55",
+          "/js/stats.js": "/js/stats.js?v=55",
+          "/js/game.js": "/js/game.js?v=55",
+          "/js/ui.js": "/js/ui.js?v=55",
+          "/js/analytics.js": "/js/analytics.js?v=55",
+          "/js/colorfield.js": "/js/colorfield.js?v=55",
+          "/js/results.js": "/js/results.js?v=55",
+          "/js/auth.js": "/js/auth.js?v=55",
+          "/js/profile.js": "/js/profile.js?v=55",
+          "/js/settings.js": "/js/settings.js?v=55",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=55",
+          "/js/pro.js": "/js/pro.js?v=55",
+          "/js/archive.js": "/js/archive.js?v=55",
+          "/js/proupsell.js": "/js/proupsell.js?v=55",
+          "/js/billing.js": "/js/billing.js?v=55",
+          "/js/pricing.js": "/js/pricing.js?v=55",
+          "/js/toast.js": "/js/toast.js?v=55",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=55"
         }
       }
     </script>

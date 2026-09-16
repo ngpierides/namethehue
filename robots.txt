@@ -1,0 +1,9 @@
+# robots.txt for Name the Hue
+# Allow everything except the admin-only stats dashboard, and point crawlers
+# at the sitemap. If the site moves off https://namethehue.com/, update the
+# Sitemap URL below to the real host.
+User-agent: *
+Allow: /
+Disallow: /stats.html
+
+Sitemap: https://namethehue.com/sitemap.xml

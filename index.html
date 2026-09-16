@@ -13,7 +13,7 @@
          and won't render a relative path. -->
     <meta
       name="description"
-      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+      content="A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch, and beat par. New puzzle every day (a daily color game, too)."
     />
     <link rel="canonical" href="https://namethehue.com/" />
     <meta name="theme-color" content="#c8452f" />
@@ -24,7 +24,7 @@
     <meta property="og:title" content="Name the Hue" />
     <meta
       property="og:description"
-      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+      content="A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch, and beat par. New puzzle every day (a daily color game, too)."
     />
     <meta property="og:url" content="https://namethehue.com/" />
     <meta property="og:image" content="https://namethehue.com/og-image.png" />
@@ -37,7 +37,7 @@
     <meta name="twitter:title" content="Name the Hue" />
     <meta
       name="twitter:description"
-      content="A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+      content="A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch, and beat par. New puzzle every day (a daily color game, too)."
     />
     <meta name="twitter:image" content="https://namethehue.com/og-image.png" />
 
@@ -56,14 +56,14 @@
             "name": "Name the Hue",
             "url": "https://namethehue.com/",
             "inLanguage": "en",
-            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+            "description": "A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch, and beat par. New puzzle every day (a daily color game, too)."
           },
           {
             "@type": "WebApplication",
             "@id": "https://namethehue.com/#app",
             "name": "Name the Hue",
             "url": "https://namethehue.com/",
-            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
+            "description": "A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch, and beat par. New puzzle every day (a daily color game, too).",
             "applicationCategory": "GameApplication",
             "genre": "Puzzle",
             "operatingSystem": "Any (web browser)",
@@ -83,26 +83,42 @@
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "How do you play Name the Hue?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "You're given a colour name and a grid of swatches. Click or tap the swatch you think matches — each guess shows a closeness score, and you aim to solve it at or under the day's par."
-                }
-              },
-              {
-                "@type": "Question",
                 "name": "Is Name the Hue free to play?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. Name the Hue is a free daily browser game with no download required. An optional Pro tier adds a Hard Mode colour mixer and an archive of past puzzles."
+                  "text": "Yes — the daily colour puzzle is completely free, with no ads and no account required. An optional Name the Hue Pro upgrade adds a Hard Mode colour mixer, unlimited Practice puzzles, and an archive of past days."
                 }
               },
               {
                 "@type": "Question",
-                "name": "How often are new puzzles released?",
+                "name": "Is this a colour guessing game like Wordle?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "A brand-new colour puzzle unlocks every day at midnight, and everyone playing on the same date gets the same colour."
+                  "text": "Very much so. It's a daily, one-puzzle-a-day game where everyone plays the same colour — but instead of guessing a five-letter word, you're guessing which swatch matches a colour name."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do you spell it colour or color?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Both work. The game uses British 'colour', but it plays identically whether you were looking for a daily colour game or a daily color game."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How is the closeness score calculated?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Each guess is compared to the target with ΔE2000 (CIEDE2000) in the CIELAB colour space — the industry standard for how different two colours look to the human eye. 100% means you found the exact answer."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Where do the colour names come from?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "From the XKCD colour survey, a public-domain (CC0) dataset of nearly a thousand community-named colours — which is where a lot of the fun and unusual names come from."
                 }
               },
               {
@@ -110,7 +126,7 @@
                 "name": "Can I play Name the Hue with friends?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. You can challenge a friend to a live head-to-head match by sharing a link or a 6-digit room code."
+                  "text": "Yes. Use Play a friend to start a live head-to-head match and share a link or a 6-digit room code; first to the colour wins the round."
                 }
               }
             ]
@@ -125,7 +141,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=56" />
+    <link rel="stylesheet" href="css/styles.css?v=57" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -264,6 +280,78 @@
 
       <section class="guesses">
         <ul id="guess-list" class="guess-list"></ul>
+      </section>
+
+      <!-- About / on-page SEO content: real, crawlable copy so search engines
+           (and new players) understand the game. Deliberately uses BOTH "colour"
+           and "color" spellings naturally so it's findable either way, and the
+           FAQ below mirrors the FAQPage structured data in the <head>. -->
+      <section class="about" aria-labelledby="about-title">
+        <h2 id="about-title">About Name the Hue</h2>
+        <p>
+          <strong>Name the Hue</strong> is a free daily colour game: each day you're given the
+          <em>name</em> of a colour — like “Sage Green”, “Burnt Sienna” or “Cerulean” — and a grid of
+          swatches, and your job is to pick the one that matches. Think of it as a
+          <strong>Wordle for colours</strong>: everyone gets the same puzzle each day, so you can
+          compare scores with friends.
+        </p>
+        <p>
+          Every guess is scored for how close it is, using the same colour-difference maths that
+          designers and printers rely on (CIEDE2000, or ΔE2000), so “close” genuinely means close to
+          the human eye — not just close in RGB. There's no losing and no timer: guess as many times as
+          you like and try to solve each day's colour at or under <strong>par</strong>. Spell it your
+          way — it plays exactly the same as a daily <strong>color game</strong>.
+        </p>
+
+        <h3>How to play</h3>
+        <ul class="about-list">
+          <li><strong>Read the colour name</strong> shown at the top of the board.</li>
+          <li><strong>Click or tap a swatch</strong> to guess it — you'll get a closeness score as a percentage.</li>
+          <li><strong>Rule swatches out</strong> by right-clicking (or long-pressing on a phone) to narrow the grid — it's free.</li>
+          <li><strong>Beat par.</strong> Guesses are unlimited, so the goal is to find the exact colour in as few tries as possible.</li>
+          <li><strong>Come back tomorrow</strong> — a brand-new colour unlocks every day at midnight.</li>
+        </ul>
+
+        <h3>Frequently asked questions</h3>
+        <div class="faq">
+          <h4>Is Name the Hue free to play?</h4>
+          <p>
+            Yes — the daily colour puzzle is completely free, with no ads and no account required. An
+            optional Name the Hue Pro upgrade adds a Hard Mode colour mixer, unlimited Practice puzzles,
+            and an archive of past days.
+          </p>
+
+          <h4>Is this a colour guessing game like Wordle?</h4>
+          <p>
+            Very much so. It's a daily, one-puzzle-a-day game where everyone plays the same colour — but
+            instead of guessing a five-letter word, you're guessing which swatch matches a colour name.
+          </p>
+
+          <h4>Do you spell it “colour” or “color”?</h4>
+          <p>
+            Both work. The game uses British “colour”, but it plays identically whether you were looking
+            for a daily colour game or a daily color game.
+          </p>
+
+          <h4>How is the closeness score calculated?</h4>
+          <p>
+            Each guess is compared to the target with ΔE2000 (CIEDE2000) in the CIELAB colour space — the
+            industry standard for how different two colours look to the human eye. 100% means you found
+            the exact answer.
+          </p>
+
+          <h4>Where do the colour names come from?</h4>
+          <p>
+            From the XKCD colour survey, a public-domain (CC0) dataset of nearly a thousand
+            community-named colours — which is where a lot of the fun and unusual names come from.
+          </p>
+
+          <h4>Can I play Name the Hue with friends?</h4>
+          <p>
+            Yes. Use <strong>Play a friend</strong> to start a live head-to-head match and share a link
+            or a 6-digit room code; first to the colour wins the round.
+          </p>
+        </div>
       </section>
 
       <footer class="footer">
@@ -510,29 +598,29 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=56",
-          "/js/config.js": "/js/config.js?v=56",
-          "/js/color.js": "/js/color.js?v=56",
-          "/js/rng.js": "/js/rng.js?v=56",
-          "/js/puzzle.js": "/js/puzzle.js?v=56",
-          "/js/storage.js": "/js/storage.js?v=56",
-          "/js/stats.js": "/js/stats.js?v=56",
-          "/js/game.js": "/js/game.js?v=56",
-          "/js/ui.js": "/js/ui.js?v=56",
-          "/js/analytics.js": "/js/analytics.js?v=56",
-          "/js/colorfield.js": "/js/colorfield.js?v=56",
-          "/js/results.js": "/js/results.js?v=56",
-          "/js/auth.js": "/js/auth.js?v=56",
-          "/js/profile.js": "/js/profile.js?v=56",
-          "/js/settings.js": "/js/settings.js?v=56",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=56",
-          "/js/pro.js": "/js/pro.js?v=56",
-          "/js/archive.js": "/js/archive.js?v=56",
-          "/js/proupsell.js": "/js/proupsell.js?v=56",
-          "/js/billing.js": "/js/billing.js?v=56",
-          "/js/pricing.js": "/js/pricing.js?v=56",
-          "/js/toast.js": "/js/toast.js?v=56",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=56"
+          "/js/main.js": "/js/main.js?v=57",
+          "/js/config.js": "/js/config.js?v=57",
+          "/js/color.js": "/js/color.js?v=57",
+          "/js/rng.js": "/js/rng.js?v=57",
+          "/js/puzzle.js": "/js/puzzle.js?v=57",
+          "/js/storage.js": "/js/storage.js?v=57",
+          "/js/stats.js": "/js/stats.js?v=57",
+          "/js/game.js": "/js/game.js?v=57",
+          "/js/ui.js": "/js/ui.js?v=57",
+          "/js/analytics.js": "/js/analytics.js?v=57",
+          "/js/colorfield.js": "/js/colorfield.js?v=57",
+          "/js/results.js": "/js/results.js?v=57",
+          "/js/auth.js": "/js/auth.js?v=57",
+          "/js/profile.js": "/js/profile.js?v=57",
+          "/js/settings.js": "/js/settings.js?v=57",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=57",
+          "/js/pro.js": "/js/pro.js?v=57",
+          "/js/archive.js": "/js/archive.js?v=57",
+          "/js/proupsell.js": "/js/proupsell.js?v=57",
+          "/js/billing.js": "/js/billing.js?v=57",
+          "/js/pricing.js": "/js/pricing.js?v=57",
+          "/js/toast.js": "/js/toast.js?v=57",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=57"
         }
       }
     </script>

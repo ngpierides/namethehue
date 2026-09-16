@@ -139,6 +139,14 @@
       <!-- error / setup note -->
       <div id="setup" class="note hidden" style="margin-bottom:26px;"></div>
 
+      <div class="section-label">Traffic</div>
+      <div class="grid">
+        <div class="card"><div class="k">Page views</div><div class="v accent" id="pv-total">–</div><div class="sub">all time</div></div>
+        <div class="card"><div class="k">Views · last 24h</div><div class="v" id="pv-24h">–</div><div class="sub" id="pv-30m-sub">– in last 30 min</div></div>
+        <div class="card"><div class="k">Views · last 7 days</div><div class="v" id="pv-7d">–</div><div class="sub">rolling week</div></div>
+        <div class="card"><div class="k">Play rate</div><div class="v gold" id="play-rate">–</div><div class="sub">games ÷ views</div></div>
+      </div>
+
       <div class="section-label">All time</div>
       <div class="grid">
         <div class="card"><div class="k">Games played</div><div class="v accent" id="total">–</div><div class="sub" id="total-sub">every completed game</div></div>
@@ -263,6 +271,17 @@
         const liPct = total ? Math.round((d.logged_in / total) * 100) : 0;
         $('li-sub').textContent = liPct + '% of games';
         $('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
+
+        // Traffic. undefined (old RPC without the page_views migration) → '–';
+        // a real zero → '0'. Play rate is completed games ÷ page views.
+        const pv = (v) => (v == null ? '–' : fmt(v));
+        const pvTotal = d.page_views_total;
+        $('pv-total').textContent = pv(pvTotal);
+        $('pv-24h').textContent = pv(d.page_views_24h);
+        $('pv-7d').textContent = pv(d.page_views_7d);
+        $('pv-30m-sub').textContent =
+          d.page_views_30m == null ? 'awaiting page_views migration' : fmt(d.page_views_30m) + ' in last 30 min';
+        $('play-rate').textContent = pvTotal ? Math.round((total / pvTotal) * 100) + '%' : '–';
 
         drawLine(d.per_day || []);
         drawDist(d.guess_dist || []);

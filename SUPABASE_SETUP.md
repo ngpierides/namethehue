@@ -565,3 +565,51 @@ select count(*) from public.game_events where created_at > now() - interval '24 
 
 Until you run the migration, the app's insert simply fails silently (swallowed by
 `analytics.js`) — nothing breaks, you just don't collect events yet.
+
+### The live dashboard (`stats.html`)
+
+`stats.html` is a ready-made dashboard (open it at `/stats.html`) that shows total
+games, per-day trend, guess distribution, grid-vs-hard, and logged-in-vs-anonymous
+— refreshing live, no SQL to run. Because `game_events` is **insert-only**, the
+dashboard can't read the table with the public key. Instead it calls an **aggregate
+function** that returns only summary numbers. Run this once:
+
+```sql
+create or replace function public.get_game_stats()
+returns json
+language sql
+security definer
+set search_path = public
+as $$
+  select json_build_object(
+    'total_games',   (select count(*) from game_events),
+    'games_30m',     (select count(*) from game_events where created_at > now() - interval '30 minutes'),
+    'games_24h',     (select count(*) from game_events where created_at > now() - interval '24 hours'),
+    'games_7d',      (select count(*) from game_events where created_at > now() - interval '7 days'),
+    'avg_guesses',   (select round(avg(guesses), 2) from game_events),
+    'distinct_days', (select count(distinct day) from game_events),
+    'grid',          (select count(*) from game_events where mode = 'grid'),
+    'hard',          (select count(*) from game_events where mode = 'hard'),
+    'logged_in',     (select count(*) from game_events where logged_in),
+    'anonymous',     (select count(*) from game_events where not logged_in),
+    'per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
+                 from (select date_trunc('day', created_at)::date as d, count(*) as n
+                       from game_events where created_at > now() - interval '28 days'
+                       group by 1) s),
+    'guess_dist', (select coalesce(json_agg(json_build_object('g', g, 'n', n) order by g), '[]'::json)
+                    from (select guesses as g, count(*) as n from game_events
+                          where guesses is not null group by 1) s)
+  );
+$$;
+
+-- Let the public anon key CALL this function (aggregates only). It still cannot
+-- read the game_events table directly. security definer = runs as the function
+-- owner, so it can read past the insert-only RLS and return just the summary.
+grant execute on function public.get_game_stats() to anon, authenticated;
+```
+
+> **Note:** the dashboard is reachable by anyone who knows the `/stats.html` URL,
+> but the function returns **only aggregate totals** — never individual rows, and
+> there's no personal data in the table anyway. To make it private, gate the page
+> behind your own login (check the signed-in user's email) instead of granting
+> `execute` to `anon`.

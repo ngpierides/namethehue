@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Name the Hue · Stats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
+    />
+    <style>
+      :root {
+        --bg: #17120d;
+        --panel: #211a14;
+        --panel-2: #2a2119;
+        --line: #362b21;
+        --ink: #f1e9da;
+        --muted: #9b8f7d;
+        --faint: #6f6455;
+        --accent: #e0653f;
+        --accent-red: #c8452f;
+        --gold: #e0a53f;
+        --blue: #5f93b8;
+        --green: #7bb36a;
+        --radius: 16px;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'Space Grotesk', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        padding: 28px 20px 64px;
+      }
+      .wrap { max-width: 1120px; margin: 0 auto; }
+
+      /* top bar */
+      .topbar {
+        display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+        background: var(--panel); border: 1px solid var(--line);
+        border-radius: var(--radius); padding: 18px 22px; margin-bottom: 26px;
+      }
+      .live { display: flex; align-items: center; gap: 12px; }
+      .dot {
+        width: 12px; height: 12px; border-radius: 50%; background: var(--accent-red);
+        box-shadow: 0 0 0 0 rgba(200,69,47,.6); animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(200,69,47,.55); }
+        70% { box-shadow: 0 0 0 10px rgba(200,69,47,0); }
+        100% { box-shadow: 0 0 0 0 rgba(200,69,47,0); }
+      }
+      .live .big { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+      .live .lbl { font-size: .64rem; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+      .pill {
+        background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+        padding: 8px 15px; font-size: .82rem; color: var(--muted);
+      }
+      .pill strong { color: var(--ink); font-weight: 600; }
+      .sep { flex: 1; }
+      .updated { font-size: .72rem; color: var(--faint); }
+      .brand { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.15rem; }
+      .brand .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--accent-red); margin-right: 3px; vertical-align: baseline; }
+      .brand .swatch:nth-child(2){ background: var(--gold); } .brand .swatch:nth-child(3){ background: var(--blue); }
+
+      .section-label { font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 4px 14px; }
+
+      /* stat cards */
+      .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+      .card {
+        background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 22px 22px 20px;
+      }
+      .card .k { font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+      .card .v { font-size: 2.5rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+      .card .v.accent { color: var(--accent); }
+      .card .v.gold { color: var(--gold); }
+      .card .sub { font-size: .78rem; color: var(--faint); margin-top: 8px; }
+
+      /* panels */
+      .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+      .panel {
+        background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 24px 24px 20px; min-height: 260px;
+      }
+      .panel h2 { font-size: 1.15rem; margin: 0 0 4px; font-weight: 600; }
+      .panel .desc { color: var(--muted); font-size: .82rem; margin: 0 0 18px; }
+      .chart { width: 100%; height: 190px; display: block; }
+      .bars { display: flex; flex-direction: column; gap: 9px; }
+      .bar-row { display: grid; grid-template-columns: 22px 1fr 34px; align-items: center; gap: 10px; font-size: .82rem; }
+      .bar-track { background: var(--panel-2); border-radius: 6px; height: 20px; overflow: hidden; }
+      .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-red), var(--accent)); border-radius: 6px; min-width: 2px; }
+      .bar-n { text-align: right; color: var(--muted); }
+      .split { display: flex; height: 26px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-top: 6px; }
+      .split > div { display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 600; color: #17120d; }
+
+      .note {
+        background: var(--panel-2); border: 1px dashed var(--line); border-radius: 12px;
+        padding: 16px 18px; color: var(--muted); font-size: .85rem; line-height: 1.5;
+      }
+      .note strong { color: var(--ink); }
+      .hidden { display: none !important; }
+      .foot { margin-top: 26px; font-size: .74rem; color: var(--faint); text-align: center; }
+      .foot a { color: var(--muted); }
+
+      @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } .panels { grid-template-columns: 1fr; } }
+      @media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; } .card .v { font-size: 2rem; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="live">
+          <span class="dot"></span>
+          <div>
+            <div class="big" id="live-30m">–</div>
+            <div class="lbl">games · last 30 min</div>
+          </div>
+        </div>
+        <span class="pill"><strong id="pill-24h">–</strong> last 24h</span>
+        <span class="pill"><strong id="pill-7d">–</strong> last 7 days</span>
+        <span class="sep"></span>
+        <span class="brand"><span class="swatch"></span><span class="swatch"></span><span class="swatch"></span> Name the Hue</span>
+        <span class="updated" id="updated"></span>
+      </div>
+
+      <!-- error / setup note -->
+      <div id="setup" class="note hidden" style="margin-bottom:26px;"></div>
+
+      <div class="section-label">All time</div>
+      <div class="grid">
+        <div class="card"><div class="k">Games played</div><div class="v accent" id="total">–</div><div class="sub" id="total-sub">every completed game</div></div>
+        <div class="card"><div class="k">Avg guesses</div><div class="v" id="avg">–</div><div class="sub">across all solves</div></div>
+        <div class="card"><div class="k">Days with play</div><div class="v" id="days">–</div><div class="sub">distinct puzzle days</div></div>
+        <div class="card"><div class="k">Hard mode</div><div class="v gold" id="hardpct">–</div><div class="sub" id="hard-sub">of all games</div></div>
+      </div>
+      <div class="grid">
+        <div class="card"><div class="k">Grid games</div><div class="v" id="grid-n">–</div><div class="sub">classic swatch hunt</div></div>
+        <div class="card"><div class="k">Hard-mode games</div><div class="v" id="hard-n">–</div><div class="sub">colour mixer</div></div>
+        <div class="card"><div class="k">Logged in</div><div class="v" id="li-n">–</div><div class="sub" id="li-sub">have an account</div></div>
+        <div class="card"><div class="k">Anonymous</div><div class="v" id="anon-n">–</div><div class="sub">no account</div></div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <h2>Games per day</h2>
+          <p class="desc">Completed games over the last 28 days.</p>
+          <svg class="chart" id="line" viewBox="0 0 600 190" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="desc" id="line-foot" style="display:flex;justify-content:space-between;margin-top:6px;"></div>
+        </div>
+        <div class="panel">
+          <h2>Guess distribution</h2>
+          <p class="desc">How many guesses it took to solve.</p>
+          <div class="bars" id="dist"></div>
+        </div>
+      </div>
+
+      <div class="panels" style="grid-template-columns:1fr;">
+        <div class="panel" style="min-height:auto;">
+          <h2>Who's playing</h2>
+          <p class="desc">Account holders vs. anonymous players.</p>
+          <div class="split" id="split"></div>
+        </div>
+      </div>
+
+      <div class="foot">
+        Live from Supabase · refreshes every 60s · <a href="index.html">← back to the game</a>
+      </div>
+    </div>
+
+    <script type="module">
+      import { SUPABASE_URL, SUPABASE_ANON_KEY } from './js/supabase-config.js';
+
+      const $ = (id) => document.getElementById(id);
+      const fmt = (n) => (n ?? 0).toLocaleString();
+
+      function showSetup(msg) {
+        const el = $('setup');
+        el.classList.remove('hidden');
+        el.innerHTML = msg;
+      }
+
+      async function load() {
+        if (!SUPABASE_URL || SUPABASE_URL.startsWith('YOUR_')) {
+          showSetup('<strong>Supabase not configured.</strong> Fill in <code>js/supabase-config.js</code> first.');
+          return;
+        }
+        let data;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_game_stats`, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: '{}',
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            showSetup(`<strong>Can't read stats yet.</strong> Make sure you've run the <code>get_game_stats()</code> function from SUPABASE_SETUP.md (Step 11). <br><span style="color:var(--faint)">Server said: ${res.status} ${t.slice(0, 160)}</span>`);
+            return;
+          }
+          data = await res.json();
+        } catch (e) {
+          showSetup(`<strong>Network error.</strong> ${e.message}`);
+          return;
+        }
+        $('setup').classList.add('hidden');
+        render(data);
+      }
+
+      function render(d) {
+        const total = d.total_games || 0;
+        $('live-30m').textContent = fmt(d.games_30m);
+        $('pill-24h').textContent = fmt(d.games_24h);
+        $('pill-7d').textContent = fmt(d.games_7d);
+        $('total').textContent = fmt(total);
+        $('avg').textContent = d.avg_guesses ?? '–';
+        $('days').textContent = fmt(d.distinct_days);
+        $('grid-n').textContent = fmt(d.grid);
+        $('hard-n').textContent = fmt(d.hard);
+        $('li-n').textContent = fmt(d.logged_in);
+        $('anon-n').textContent = fmt(d.anonymous);
+        const hardPct = total ? Math.round((d.hard / total) * 100) : 0;
+        $('hardpct').textContent = hardPct + '%';
+        const liPct = total ? Math.round((d.logged_in / total) * 100) : 0;
+        $('li-sub').textContent = liPct + '% of games';
+        $('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
+
+        drawLine(d.per_day || []);
+        drawDist(d.guess_dist || []);
+        drawSplit(d.logged_in || 0, d.anonymous || 0);
+      }
+
+      function drawLine(rows) {
+        const svg = $('line');
+        svg.innerHTML = '';
+        const foot = $('line-foot');
+        if (rows.length < 2) {
+          svg.innerHTML = `<text x="300" y="95" fill="#6f6455" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet — play a few games</text>`;
+          foot.innerHTML = '';
+          return;
+        }
+        const W = 600, H = 190, pad = 10;
+        const ns = rows.map((r) => r.n);
+        const max = Math.max(...ns, 1);
+        const x = (i) => pad + (i * (W - pad * 2)) / (rows.length - 1);
+        const y = (v) => H - pad - (v / max) * (H - pad * 2);
+        const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.n).toFixed(1)}`).join(' ');
+        const area = `${line} L${x(rows.length - 1).toFixed(1)},${H - pad} L${x(0).toFixed(1)},${H - pad} Z`;
+        const peakIdx = ns.indexOf(max);
+        svg.innerHTML = `
+          <defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#c8452f" stop-opacity="0.42"/>
+            <stop offset="1" stop-color="#c8452f" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="${area}" fill="url(#fill)"/>
+          <path d="${line}" fill="none" stroke="#e0653f" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#e0653f"/>`;
+        const d0 = rows[0].d, d1 = rows[rows.length - 1].d;
+        foot.innerHTML = `<span>${d0}</span><span>peak ${max}</span><span>${d1}</span>`;
+      }
+
+      function drawDist(rows) {
+        const el = $('dist');
+        if (!rows.length) { el.innerHTML = `<div class="desc">No solves yet.</div>`; return; }
+        const byG = {};
+        rows.forEach((r) => { const g = r.g >= 6 ? '6+' : String(r.g); byG[g] = (byG[g] || 0) + r.n; });
+        const keys = ['1', '2', '3', '4', '5', '6+'];
+        const max = Math.max(...keys.map((k) => byG[k] || 0), 1);
+        el.innerHTML = keys.map((k) => {
+          const n = byG[k] || 0;
+          return `<div class="bar-row"><span>${k}</span><div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%"></div></div><span class="bar-n">${n}</span></div>`;
+        }).join('');
+      }
+
+      function drawSplit(li, anon) {
+        const el = $('split');
+        const total = li + anon;
+        if (!total) { el.innerHTML = `<div style="background:var(--panel-2);flex:1;color:var(--muted)">no data</div>`; return; }
+        const liPct = (li / total) * 100;
+        el.innerHTML = `
+          <div style="width:${liPct}%;background:var(--blue)">${liPct > 12 ? 'Logged in ' + Math.round(liPct) + '%' : ''}</div>
+          <div style="width:${100 - liPct}%;background:var(--gold)">${100 - liPct > 12 ? 'Anon ' + Math.round(100 - liPct) + '%' : ''}</div>`;
+      }
+
+      load();
+      setInterval(load, 60000);
+    </script>
+  </body>
+</html>

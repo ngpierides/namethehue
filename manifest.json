@@ -1,7 +1,7 @@
 {
   "name": "Name the Hue",
   "short_name": "Name the Hue",
-  "description": "A daily colour game — you're given a colour name, find the matching swatch.",
+  "description": "A free daily colour game — like Wordle for colours. Get a colour name, find the matching swatch. A daily color game, too.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

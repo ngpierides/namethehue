@@ -717,6 +717,55 @@ body {
   border-radius: 4px;
   border: 1px solid var(--line);
 }
+/* ---- About / on-page SEO content ---- */
+/* A calm, readable article below the game. All colours are tokens, so it
+   themes itself in dark mode with no extra rules. */
+.about {
+  margin-top: 44px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+.about h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+.about h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin: 28px 0 10px;
+}
+.about h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 16px 0 4px;
+}
+.about p {
+  margin: 0 0 12px;
+}
+.about strong {
+  color: var(--ink);
+}
+.about-list {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+.about-list li {
+  margin-bottom: 7px;
+}
+.about .faq h4:first-child {
+  margin-top: 4px;
+}
+
 .footer {
   margin-top: 28px;
   text-align: center;

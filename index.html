@@ -51,6 +51,32 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
     />
+
+    <!-- PWA / Add to Home Screen -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Name the Hue" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Analytics (optional, cookieless — no cookie-consent banner needed).
+         To turn on: create a free site at dash.cloudflare.com → Web Analytics,
+         copy its token, and paste it over CF_TOKEN below. Left as-is, analytics
+         stay OFF (no script loads, no requests). If you enable it, add Cloudflare
+         to the "processors" list in privacy.html. -->
+    <script>
+      (function () {
+        var CF_TOKEN = 'CF_TOKEN'; // ← paste your Cloudflare Web Analytics token
+        if (CF_TOKEN && CF_TOKEN !== 'CF_TOKEN') {
+          var s = document.createElement('script');
+          s.defer = true;
+          s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+          s.setAttribute('data-cf-beacon', JSON.stringify({ token: CF_TOKEN }));
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
   </head>
   <body>
     <main class="app">

@@ -5,6 +5,9 @@
 // id is stored — just day / guesses / par / mode. No-ops entirely when Supabase
 // isn't configured, and it must never throw into gameplay. The table + its
 // insert-only RLS policy live in SUPABASE_SETUP.md.
+//
+// Also logs one anonymous `page_views` row per page load (traffic count on the
+// admin dashboard), same insert-only + write-only contract as game_events.
 
 import { getSupabaseClient, getSession, isConfigured } from './auth.js';
 
@@ -27,6 +30,25 @@ export async function logGameCompleted({ day, guesses, par, mode }) {
       mode,
       logged_in: !!getSession(),
     });
+  } catch {
+    /* telemetry must never break the game */
+  }
+}
+
+/**
+ * Record one page view. Best-effort, fire-and-forget — call once per page load.
+ * Stores nothing personal: just a timestamp (server default) and the path, so
+ * the admin dashboard can show traffic without cookies or a user id.
+ */
+export async function logPageView() {
+  if (!isConfigured()) return;
+  try {
+    const client = await getSupabaseClient();
+    if (!client) return;
+    // Write-only like game_events (RLS has an insert policy but no read policy),
+    // so no .select() is chained. Path only — never query strings, which can
+    // carry room codes / ?day previews we don't want to store.
+    await client.from('page_views').insert({ path: location.pathname });
   } catch {
     /* telemetry must never break the game */
   }

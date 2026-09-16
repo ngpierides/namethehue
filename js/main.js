@@ -15,6 +15,7 @@ import { isPro, isHardMode, onProChange, setCloudMode } from './pro.js';
 import { initAuth, isConfigured, refreshSync } from './auth.js';
 import { startCheckout, openPortal } from './billing.js';
 import { showToast } from './toast.js';
+import { logPageView } from './analytics.js';
 
 async function loadJson(path, fallback) {
   try {
@@ -29,6 +30,8 @@ async function loadJson(path, fallback) {
 
 async function main() {
   applyStoredPrefs(); // theme + reduce-motion, before the board paints
+
+  logPageView(); // anonymous traffic count (fire-and-forget; no-op without Supabase)
 
   // Decide where Pro comes from before anything reads isPro(): the server when
   // Supabase is configured, else the local self-serve toggle. auth.js reconciles

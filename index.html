@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Name the Hue</title>
+    <title>Name the Hue — Daily Colour Guessing Game</title>
+    <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <!-- SEO + social share. og:url and og:image must be ABSOLUTE urls pointing at
          the live site (currently https://namethehue.com/). If you host elsewhere,
@@ -41,26 +42,80 @@
     <meta name="twitter:image" content="https://namethehue.com/og-image.png" />
 
     <!-- Structured data (schema.org) — helps Google understand this is a free,
-         browser-based daily game and can earn a richer search result. Keep the
-         urls absolute and in sync with the canonical/OG host above. -->
+         browser-based daily game and can earn a richer search result (incl. an
+         FAQ rich result). Keep the urls absolute and in sync with the
+         canonical/OG host above, and keep the FAQ answers truthful — Google can
+         penalise FAQ markup that doesn't match visible/known site content. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Name the Hue",
-        "url": "https://namethehue.com/",
-        "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
-        "applicationCategory": "GameApplication",
-        "genre": "Puzzle",
-        "operatingSystem": "Any (web browser)",
-        "browserRequirements": "Requires JavaScript.",
-        "inLanguage": "en",
-        "image": "https://namethehue.com/og-image.png",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://namethehue.com/#website",
+            "name": "Name the Hue",
+            "url": "https://namethehue.com/",
+            "inLanguage": "en",
+            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day."
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://namethehue.com/#app",
+            "name": "Name the Hue",
+            "url": "https://namethehue.com/",
+            "description": "A daily colour game — you're given a colour name, find the matching swatch. New puzzle every day.",
+            "applicationCategory": "GameApplication",
+            "genre": "Puzzle",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript.",
+            "inLanguage": "en",
+            "image": "https://namethehue.com/og-image.png",
+            "isPartOf": { "@id": "https://namethehue.com/#website" },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://namethehue.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How do you play Name the Hue?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You're given a colour name and a grid of swatches. Click or tap the swatch you think matches — each guess shows a closeness score, and you aim to solve it at or under the day's par."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Name the Hue free to play?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Name the Hue is a free daily browser game with no download required. An optional Pro tier adds a Hard Mode colour mixer and an archive of past puzzles."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How often are new puzzles released?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A brand-new colour puzzle unlocks every day at midnight, and everyone playing on the same date gets the same colour."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I play Name the Hue with friends?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. You can challenge a friend to a live head-to-head match by sharing a link or a 6-digit room code."
+                }
+              }
+            ]
+          }
+        ]
       }
     </script>
 
@@ -70,7 +125,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=55" />
+    <link rel="stylesheet" href="css/styles.css?v=56" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -147,7 +202,7 @@
         </div>
         <div class="wordmark">
           <span class="swatch-dots" aria-hidden="true"></span>
-          <span class="wordmark-text">Name the Hue</span>
+          <h1 class="wordmark-text">Name the Hue</h1>
         </div>
         <p class="kicker">A daily colour hunt - match the name to the swatch.</p>
         <div class="masthead-actions">
@@ -455,29 +510,29 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=55",
-          "/js/config.js": "/js/config.js?v=55",
-          "/js/color.js": "/js/color.js?v=55",
-          "/js/rng.js": "/js/rng.js?v=55",
-          "/js/puzzle.js": "/js/puzzle.js?v=55",
-          "/js/storage.js": "/js/storage.js?v=55",
-          "/js/stats.js": "/js/stats.js?v=55",
-          "/js/game.js": "/js/game.js?v=55",
-          "/js/ui.js": "/js/ui.js?v=55",
-          "/js/analytics.js": "/js/analytics.js?v=55",
-          "/js/colorfield.js": "/js/colorfield.js?v=55",
-          "/js/results.js": "/js/results.js?v=55",
-          "/js/auth.js": "/js/auth.js?v=55",
-          "/js/profile.js": "/js/profile.js?v=55",
-          "/js/settings.js": "/js/settings.js?v=55",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=55",
-          "/js/pro.js": "/js/pro.js?v=55",
-          "/js/archive.js": "/js/archive.js?v=55",
-          "/js/proupsell.js": "/js/proupsell.js?v=55",
-          "/js/billing.js": "/js/billing.js?v=55",
-          "/js/pricing.js": "/js/pricing.js?v=55",
-          "/js/toast.js": "/js/toast.js?v=55",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=55"
+          "/js/main.js": "/js/main.js?v=56",
+          "/js/config.js": "/js/config.js?v=56",
+          "/js/color.js": "/js/color.js?v=56",
+          "/js/rng.js": "/js/rng.js?v=56",
+          "/js/puzzle.js": "/js/puzzle.js?v=56",
+          "/js/storage.js": "/js/storage.js?v=56",
+          "/js/stats.js": "/js/stats.js?v=56",
+          "/js/game.js": "/js/game.js?v=56",
+          "/js/ui.js": "/js/ui.js?v=56",
+          "/js/analytics.js": "/js/analytics.js?v=56",
+          "/js/colorfield.js": "/js/colorfield.js?v=56",
+          "/js/results.js": "/js/results.js?v=56",
+          "/js/auth.js": "/js/auth.js?v=56",
+          "/js/profile.js": "/js/profile.js?v=56",
+          "/js/settings.js": "/js/settings.js?v=56",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=56",
+          "/js/pro.js": "/js/pro.js?v=56",
+          "/js/archive.js": "/js/archive.js?v=56",
+          "/js/proupsell.js": "/js/proupsell.js?v=56",
+          "/js/billing.js": "/js/billing.js?v=56",
+          "/js/pricing.js": "/js/pricing.js?v=56",
+          "/js/toast.js": "/js/toast.js?v=56",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=56"
         }
       }
     </script>

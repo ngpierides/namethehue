@@ -546,6 +546,37 @@ create index if not exists game_events_day_idx     on public.game_events (day);
 > mode and a `logged_in` boolean. It's aggregate gameplay telemetry, not personal
 > data. (The client never reads this table; it's write-only from the browser.)
 
+### Page views (traffic on the dashboard)
+
+`game_events` counts *games*; to also count *page views* (every load of the site,
+player or not — the "Traffic" cards on `stats.html`), add a second write-only
+table. It's driven by `logPageView()` in `js/analytics.js`, fired once per load
+in `main.js`. Run this once in the **SQL Editor** (before re-running the
+`get_game_stats` function below, which reads from it):
+
+```sql
+create table if not exists public.page_views (
+  id          bigint generated always as identity primary key,
+  created_at  timestamptz not null default now(),
+  path        text
+);
+
+alter table public.page_views enable row level security;
+
+-- Same contract as game_events: anyone may INSERT, nobody may read via the anon
+-- key. You read it through the admin-only get_game_stats() function.
+create policy "anyone can log a page view" on public.page_views
+  for insert to anon, authenticated
+  with check (true);
+
+create index if not exists page_views_created_idx on public.page_views (created_at);
+```
+
+> **Privacy:** only a timestamp and the URL *path* (e.g. `/`, `/terms.html`) are
+> stored — never the query string (so room codes / `?day=` previews aren't kept),
+> no user id, no IP. Until you run this migration, `logPageView()` fails silently
+> and the dashboard's Traffic cards show "–".
+
 ### Reading it (dashboard → SQL Editor)
 
 ```sql
@@ -568,9 +599,9 @@ Until you run the migration, the app's insert simply fails silently (swallowed b
 
 ### The live dashboard (`stats.html`)
 
-`stats.html` is a ready-made dashboard (open it at `/stats.html`) that shows total
-games, per-day trend, guess distribution, grid-vs-hard, and logged-in-vs-anonymous
-— refreshing live, no SQL to run. Because `game_events` is **insert-only**, the
+`stats.html` is a ready-made dashboard (open it at `/stats.html`) that shows page
+views (traffic), total games, per-day trend, guess distribution, grid-vs-hard, and
+logged-in-vs-anonymous — refreshing live, no SQL to run. Because `game_events` is **insert-only**, the
 dashboard can't read the table with the public key. Instead it calls an **aggregate
 function** that returns only summary numbers. Run this once:
 
@@ -599,6 +630,10 @@ begin
     'hard',          (select count(*) from game_events where mode = 'hard'),
     'logged_in',     (select count(*) from game_events where logged_in),
     'anonymous',     (select count(*) from game_events where not logged_in),
+    'page_views_total', (select count(*) from page_views),
+    'page_views_30m',   (select count(*) from page_views where created_at > now() - interval '30 minutes'),
+    'page_views_24h',   (select count(*) from page_views where created_at > now() - interval '24 hours'),
+    'page_views_7d',    (select count(*) from page_views where created_at > now() - interval '7 days'),
     'per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
                  from (select date_trunc('day', created_at)::date as d, count(*) as n
                        from game_events where created_at > now() - interval '28 days'

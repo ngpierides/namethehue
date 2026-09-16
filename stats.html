@@ -17,20 +17,21 @@
     />
     <style>
       :root {
-        --bg: #17120d;
-        --panel: #211a14;
-        --panel-2: #2a2119;
-        --line: #362b21;
-        --ink: #f1e9da;
-        --muted: #9b8f7d;
-        --faint: #6f6455;
-        --accent: #e0653f;
+        --bg: #efe9dd;
+        --panel: #fbf8f1;
+        --panel-2: #efe9dd;
+        --line: #ded6c6;
+        --ink: #211d18;
+        --muted: #6f675a;
+        --faint: #a49a88;
+        --accent: #c0472d;
         --accent-red: #c8452f;
-        --gold: #e0a53f;
-        --blue: #5f93b8;
-        --green: #7bb36a;
+        --gold: #c98a2b;
+        --blue: #3c73a8;
+        --green: #2f7d4f;
         --radius: 16px;
-        color-scheme: dark;
+        --shadow: 0 1px 2px rgba(33, 29, 24, 0.06), 0 8px 24px rgba(33, 29, 24, 0.05);
+        color-scheme: light;
       }
       * { box-sizing: border-box; }
       body {
@@ -40,6 +41,7 @@
         font-family: 'Space Grotesk', system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         padding: 28px 20px 64px;
+        visibility: hidden; /* revealed by JS only for the admin (no content flash) */
       }
       .wrap { max-width: 1120px; margin: 0 auto; }
 
@@ -48,6 +50,7 @@
         display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
         background: var(--panel); border: 1px solid var(--line);
         border-radius: var(--radius); padding: 18px 22px; margin-bottom: 26px;
+        box-shadow: var(--shadow);
       }
       .live { display: flex; align-items: center; gap: 12px; }
       .dot {
@@ -78,7 +81,7 @@
       .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
       .card {
         background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-        padding: 22px 22px 20px;
+        padding: 22px 22px 20px; box-shadow: var(--shadow);
       }
       .card .k { font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
       .card .v { font-size: 2.5rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
@@ -90,7 +93,7 @@
       .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
       .panel {
         background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-        padding: 24px 24px 20px; min-height: 260px;
+        padding: 24px 24px 20px; min-height: 260px; box-shadow: var(--shadow);
       }
       .panel h2 { font-size: 1.15rem; margin: 0 0 4px; font-weight: 600; }
       .panel .desc { color: var(--muted); font-size: .82rem; margin: 0 0 18px; }
@@ -101,7 +104,7 @@
       .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-red), var(--accent)); border-radius: 6px; min-width: 2px; }
       .bar-n { text-align: right; color: var(--muted); }
       .split { display: flex; height: 26px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-top: 6px; }
-      .split > div { display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 600; color: #17120d; }
+      .split > div { display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 600; color: #fff; }
 
       .note {
         background: var(--panel-2); border: 1px dashed var(--line); border-radius: 12px;
@@ -178,7 +181,12 @@
     </div>
 
     <script type="module">
-      import { SUPABASE_URL, SUPABASE_ANON_KEY } from './js/supabase-config.js';
+      import { getSupabaseClient } from './js/auth.js';
+
+      // Admin gate: only this account may view the dashboard. Set it to the email
+      // you sign into Name the Hue with (must match ADMIN in the SQL function).
+      const ADMIN_EMAIL = 'nickpier07@gmail.com';
+      const HOME = 'index.html'; // where non-admins are redirected
 
       const $ = (id) => document.getElementById(id);
       const fmt = (n) => (n ?? 0).toLocaleString();
@@ -189,30 +197,27 @@
         el.innerHTML = msg;
       }
 
-      async function load() {
-        if (!SUPABASE_URL || SUPABASE_URL.startsWith('YOUR_')) {
-          showSetup('<strong>Supabase not configured.</strong> Fill in <code>js/supabase-config.js</code> first.');
+      // Verify the viewer is the admin before revealing anything; bounce home otherwise.
+      async function boot() {
+        const client = await getSupabaseClient();
+        if (!client) { location.replace(HOME); return; } // Supabase not configured
+        let user = null;
+        try { ({ data: { user } } = await client.auth.getUser()); } catch { /* no session */ }
+        if (!user || (user.email || '').toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          location.replace(HOME); // not signed in as the admin → back to the game
           return;
         }
-        let data;
-        try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_game_stats`, {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: '{}',
-          });
-          if (!res.ok) {
-            const t = await res.text();
-            showSetup(`<strong>Can't read stats yet.</strong> Make sure you've run the <code>get_game_stats()</code> function from SUPABASE_SETUP.md (Step 11). <br><span style="color:var(--faint)">Server said: ${res.status} ${t.slice(0, 160)}</span>`);
-            return;
-          }
-          data = await res.json();
-        } catch (e) {
-          showSetup(`<strong>Network error.</strong> ${e.message}`);
+        document.body.style.visibility = 'visible'; // reveal only for the admin
+        load(client);
+        setInterval(() => load(client), 60000);
+      }
+
+      async function load(client) {
+        // Called with the admin's JWT; the RPC also re-checks the caller is the
+        // admin, so the numbers are protected server-side, not just by this page.
+        const { data, error } = await client.rpc('get_game_stats');
+        if (error) {
+          showSetup(`<strong>Can't read stats.</strong> ${error.message}. Make sure you've run the admin-gated <code>get_game_stats()</code> from SUPABASE_SETUP.md (Step 11).`);
           return;
         }
         $('setup').classList.add('hidden');
@@ -247,7 +252,7 @@
         svg.innerHTML = '';
         const foot = $('line-foot');
         if (rows.length < 2) {
-          svg.innerHTML = `<text x="300" y="95" fill="#6f6455" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet — play a few games</text>`;
+          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet — play a few games</text>`;
           foot.innerHTML = '';
           return;
         }
@@ -261,12 +266,12 @@
         const peakIdx = ns.indexOf(max);
         svg.innerHTML = `
           <defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stop-color="#c8452f" stop-opacity="0.42"/>
-            <stop offset="1" stop-color="#c8452f" stop-opacity="0"/>
+            <stop offset="0" stop-color="#c0472d" stop-opacity="0.28"/>
+            <stop offset="1" stop-color="#c0472d" stop-opacity="0"/>
           </linearGradient></defs>
           <path d="${area}" fill="url(#fill)"/>
-          <path d="${line}" fill="none" stroke="#e0653f" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-          <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#e0653f"/>`;
+          <path d="${line}" fill="none" stroke="#c0472d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#c0472d"/>`;
         const d0 = rows[0].d, d1 = rows[rows.length - 1].d;
         foot.innerHTML = `<span>${d0}</span><span>peak ${max}</span><span>${d1}</span>`;
       }
@@ -294,8 +299,7 @@
           <div style="width:${100 - liPct}%;background:var(--gold)">${100 - liPct > 12 ? 'Anon ' + Math.round(100 - liPct) + '%' : ''}</div>`;
       }
 
-      load();
-      setInterval(load, 60000);
+      boot();
     </script>
   </body>
 </html>

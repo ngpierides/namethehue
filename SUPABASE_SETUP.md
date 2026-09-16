@@ -577,11 +577,18 @@ function** that returns only summary numbers. Run this once:
 ```sql
 create or replace function public.get_game_stats()
 returns json
-language sql
+language plpgsql
 security definer
 set search_path = public
 as $$
-  select json_build_object(
+begin
+  -- Admin-only: only this account may read stats; everyone else gets an error.
+  -- Change the email to match ADMIN_EMAIL in stats.html.
+  if coalesce(auth.jwt() ->> 'email', '') <> 'nickpier07@gmail.com' then
+    raise exception 'not authorized';
+  end if;
+
+  return (select json_build_object(
     'total_games',   (select count(*) from game_events),
     'games_30m',     (select count(*) from game_events where created_at > now() - interval '30 minutes'),
     'games_24h',     (select count(*) from game_events where created_at > now() - interval '24 hours'),
@@ -599,17 +606,19 @@ as $$
     'guess_dist', (select coalesce(json_agg(json_build_object('g', g, 'n', n) order by g), '[]'::json)
                     from (select guesses as g, count(*) as n from game_events
                           where guesses is not null group by 1) s)
-  );
+  ));
+end;
 $$;
 
--- Let the public anon key CALL this function (aggregates only). It still cannot
--- read the game_events table directly. security definer = runs as the function
--- owner, so it can read past the insert-only RLS and return just the summary.
-grant execute on function public.get_game_stats() to anon, authenticated;
+-- Admin-only: the logged-out anon key can't call it; only signed-in users can,
+-- and the email check inside restricts it to you. security definer lets it read
+-- past the insert-only RLS to build the summary.
+revoke execute on function public.get_game_stats() from anon;
+grant execute on function public.get_game_stats() to authenticated;
 ```
 
-> **Note:** the dashboard is reachable by anyone who knows the `/stats.html` URL,
-> but the function returns **only aggregate totals** — never individual rows, and
-> there's no personal data in the table anyway. To make it private, gate the page
-> behind your own login (check the signed-in user's email) instead of granting
-> `execute` to `anon`.
+> **Admin-only, two layers:** `stats.html` bounces anyone who isn't signed in as
+> `ADMIN_EMAIL` back to the game, and the function above independently rejects any
+> caller whose JWT email isn't the admin — so even a direct API call returns "not
+> authorized". Set the same email in **both** places (stats.html `ADMIN_EMAIL` and
+> the `if` check in this function) to the address you log into the game with.

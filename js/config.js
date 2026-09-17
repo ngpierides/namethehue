@@ -33,7 +33,7 @@ export const CONFIG = {
   // Of the 47 non-answer swatches, how many are the *closest* colours to the
   // answer (hard distractors). The rest are picked at random from the list.
   // More = harder, because near-misses look almost right.
-  hardDistractors: 10,
+  hardDistractors: 8,
 
   // ΔE2000 distance at (or above) which the closeness score reads 0%.
   // Smaller = harsher scoring. ~60 is a good "obviously different" threshold.

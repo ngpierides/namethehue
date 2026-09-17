@@ -11,6 +11,7 @@ import {
   signOut,
 } from './auth.js';
 import { getPersonalStats } from './stats.js';
+import { escapeHtml } from './dom.js';
 
 export class Profile {
   constructor() {
@@ -183,10 +184,4 @@ function statsGrid() {
       ${cell(s.curStreak, 'Streak')}
       ${cell(s.maxStreak, 'Max streak')}
     </div>`;
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
 }

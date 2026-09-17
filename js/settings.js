@@ -7,6 +7,7 @@
 import { isPro, setPro, isHardMode, setHardMode, isCloudManaged, proSource } from './pro.js';
 import { isConfigured, getSession, updateDisplayName } from './auth.js';
 import { getPrices } from './pricing.js';
+import { escapeHtml } from './dom.js';
 
 const THEME_KEY = 'colordle:theme'; // 'light' | 'dark' (default light)
 const MOTION_KEY = 'colordle:reducemotion'; // '1' when reduced
@@ -296,10 +297,4 @@ export class Settings {
     } catch { /* ignore */ }
     location.reload(); // rebuild the board + stats from a clean slate
   }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
 }

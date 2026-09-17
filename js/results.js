@@ -10,6 +10,7 @@ import {
   resetZoneNote,
 } from './stats.js';
 import { isConfigured, getSession } from './auth.js';
+import { escapeHtml, flash } from './dom.js';
 
 export class Results {
   /** @param {{ onLoginClick?: ()=>void }} opts */
@@ -111,7 +112,7 @@ export class Results {
     const text = buildShareText(dayNumber, game);
     try {
       await navigator.clipboard.writeText(text);
-      flash(btn, 'Copied!');
+      flash(btn, 'Copied!', { disable: true });
     } catch {
       // Clipboard blocked (e.g. insecure context): fall back to a prompt.
       window.prompt('Copy your result:', text);
@@ -161,20 +162,4 @@ function personalBars(stats, highlight) {
 
 function pad(n) {
   return String(n).padStart(2, '0');
-}
-
-function flash(btn, msg) {
-  const original = btn.textContent;
-  btn.textContent = msg;
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = original;
-    btn.disabled = false;
-  }, 1400);
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
 }

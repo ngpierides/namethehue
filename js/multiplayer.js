@@ -15,6 +15,7 @@ import { buildRandomPuzzle } from './puzzle.js';
 import { getSupabaseClient, getSession } from './auth.js';
 import { isHardMode } from './pro.js';
 import { attachColorField } from './colorfield.js';
+import { flash } from './dom.js';
 
 const PID_KEY = 'colordle:pid';
 const NAME_KEY = 'colordle:name'; // the name a signed-out player typed for multiplayer
@@ -365,7 +366,7 @@ export class Multiplayer {
     const btn = document.getElementById('mp-share');
     try {
       if (navigator.share) await navigator.share({ text });
-      else { await navigator.clipboard.writeText(text); flashBtn(btn, 'Copied!'); }
+      else { await navigator.clipboard.writeText(text); flash(btn, 'Copied!'); }
     } catch { /* user dismissed the share sheet, or clipboard blocked */ }
   }
 
@@ -587,8 +588,7 @@ export class Multiplayer {
     const btn = document.getElementById('mp-copy');
     try {
       await navigator.clipboard.writeText(link);
-      const t = btn.textContent; btn.textContent = 'Copied!';
-      setTimeout(() => (btn.textContent = t), 1400);
+      flash(btn, 'Copied!');
     } catch {
       document.getElementById('mp-link').select();
     }
@@ -598,8 +598,7 @@ export class Multiplayer {
     const el = document.getElementById('mp-code');
     try {
       await navigator.clipboard.writeText(this.code);
-      const t = el.textContent; el.textContent = 'Copied!';
-      setTimeout(() => (el.textContent = this.code), 1200);
+      flash(el, 'Copied!', { ms: 1200 });
     } catch { /* ignore - the code is right there to read */ }
   }
 
@@ -635,13 +634,6 @@ function myName() {
 /** Best (highest) closeness across a player's Hard-Mode guesses. */
 function bestPct(arr) {
   return arr && arr.length ? Math.max(...arr.map((g) => g.closeness)) : 0;
-}
-
-function flashBtn(btn, msg) {
-  if (!btn) return;
-  const t = btn.textContent;
-  btn.textContent = msg;
-  setTimeout(() => { btn.textContent = t; }, 1400);
 }
 
 function readOrMake(key, make, store = localStorage) {

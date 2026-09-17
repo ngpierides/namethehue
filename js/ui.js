@@ -8,6 +8,7 @@ import { luminance } from './color.js';
 import { recordResult } from './stats.js';
 import { logGameCompleted } from './analytics.js';
 import { attachColorField } from './colorfield.js';
+import { escapeHtml } from './dom.js';
 
 export class UI {
   /** @param {import('./game.js').Game} game
@@ -217,12 +218,6 @@ export class UI {
       <span><strong>${verdict}</strong> <em>${escapeHtml(t.name)}</em> (${t.hex}),
       found in ${n} guess${n === 1 ? '' : 'es'} · par ${par}.</span>`;
   }
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
 }
 
 // ---- Hard Mode UI ("mix the colour") ---------------------------------------

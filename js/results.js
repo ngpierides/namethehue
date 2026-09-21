@@ -104,8 +104,21 @@ export class Results {
 
     // Nudge guests to log in - only when cloud login is available but nobody's
     // signed in. (Hidden in local-only mode, where there's nothing to log into.)
+    // On a real streak, loss-frame it (the one thing a daily player fears losing);
+    // otherwise fall back to the generic save-your-stats ask.
     const nudge = document.getElementById('results-nudge');
     nudge.hidden = !(isConfigured() && !getSession());
+    if (!nudge.hidden) {
+      const strong = nudge.querySelector('.nudge-text strong');
+      const sub = nudge.querySelector('.nudge-sub');
+      if (s.curStreak >= 2) {
+        strong.textContent = `You're on a ${s.curStreak}-day streak`;
+        sub.textContent = "Create a free account so you don't lose it.";
+      } else {
+        strong.textContent = 'Log in to save your streak';
+        sub.textContent = 'Keep your stats across every device.';
+      }
+    }
   }
 
   async _share(dayNumber, game, btn) {

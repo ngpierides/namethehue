@@ -6,10 +6,16 @@
 // took vs the day's par. (Any legacy won:false record simply doesn't extend a
 // streak.)
 //
-// The history is a simple map { dayNumber: { won, guesses } } kept in
-// localStorage. It's also the unit that syncs to the cloud when a player logs
-// in (see auth.js): the whole map is merged with the server copy and pushed
-// back, so stats survive across devices.
+// The history is a simple map { dayNumber: { won, guesses } }. It's the unit
+// that syncs to the cloud when a player logs in (see auth.js): the whole map is
+// merged with the server copy and pushed back, so stats survive across devices.
+//
+// Persistence is ACCOUNT-GATED: stats are saved to the browser (localStorage)
+// only while signed in. Signed-out guests keep their history in memory for the
+// current page session only — it never touches localStorage and is gone on
+// reload. auth.js flips the gate via setStatsPersist() on every session change.
+// The working copy is always the in-memory `mem` object, so a guest's results
+// modal is still coherent right after they solve.
 
 import { CONFIG, resolvedTimeZone } from './config.js';
 
@@ -17,15 +23,39 @@ const STATS_KEY = 'colordle:stats';
 
 // ---- Personal stats (real, from this browser's history) --------------------
 
-function loadRaw() {
-  try {
-    return JSON.parse(localStorage.getItem(STATS_KEY)) || { days: {} };
-  } catch {
-    return { days: {} };
+let persist = false;   // true only while signed in — the account gate
+let mem = null;        // the single in-memory working copy (lazily seeded)
+
+/**
+ * Turn browser persistence on/off. Called by auth.js: on when a session exists,
+ * off when signed out. Turning it on flushes this session's in-memory history
+ * so the login sync can push it up; turning it off forgets the browser copy.
+ */
+export function setStatsPersist(on) {
+  const was = persist;
+  persist = !!on;
+  if (persist && !was) {
+    save(loadRaw()); // signed in: flush in-memory history to localStorage for sync
+  } else if (!persist && was) {
+    mem = { days: {} }; // signed out: stats live only with an account
+    try { localStorage.removeItem(STATS_KEY); } catch { /* ignore */ }
   }
 }
 
+function loadRaw() {
+  if (mem) return mem;
+  if (persist) {
+    try { mem = JSON.parse(localStorage.getItem(STATS_KEY)) || { days: {} }; }
+    catch { mem = { days: {} }; }
+  } else {
+    mem = { days: {} }; // guest: start clean, in memory only
+  }
+  return mem;
+}
+
 function save(raw) {
+  mem = raw;
+  if (!persist) return; // guests: in-memory only, nothing written to the browser
   try {
     localStorage.setItem(STATS_KEY, JSON.stringify(raw));
   } catch {

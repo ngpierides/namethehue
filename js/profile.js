@@ -90,8 +90,8 @@ export class Profile {
     this.body.innerHTML = `
       <p class="profile-lead">${
         signup
-          ? 'Create an account to save your streak and stats across every device.'
-          : 'Log in to save your streak and stats across every device.'
+          ? "Stats are only saved with an account. Create one to keep your streak and stats across every device."
+          : "Stats are only saved with an account. Log in to keep your streak and stats across every device."
       }</p>
       <form id="auth-form" class="auth-form">
         ${

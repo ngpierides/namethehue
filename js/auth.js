@@ -6,7 +6,7 @@
 //     player's stat history synced (pull → merge → push).
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { getStatsBlob, getPersonalStats, mergeIntoLocal, onStatsChange } from './stats.js';
+import { getStatsBlob, getPersonalStats, mergeIntoLocal, onStatsChange, setStatsPersist } from './stats.js';
 import { applyEntitlement } from './pro.js';
 
 const TABLE = 'player_stats';
@@ -76,6 +76,7 @@ export async function initAuth(h = {}) {
 
 async function handleSession(s) {
   session = s;
+  setStatsPersist(!!s); // stats are saved to the browser only while signed in
   if (s) await syncOnLogin();
   else applyEntitlement(null); // configured but signed out ⇒ free tier
   handlers.onAuth?.(s);

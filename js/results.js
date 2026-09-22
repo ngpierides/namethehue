@@ -85,6 +85,13 @@ export class Results {
       outcome.hidden = true;
     }
 
+    // Stats + distribution are an account perk: signed-out guests (cloud
+    // configured but not logged in) get the account-creation nudge instead, so
+    // there's a real reason to sign up. Local-only mode still shows them (there's
+    // no account to create there).
+    const guest = isConfigured() && !getSession();
+    document.getElementById('results-stats').hidden = guest;
+
     // Personal summary numbers.
     const s = getPersonalStats();
     document.getElementById('stat-played').textContent = s.played;

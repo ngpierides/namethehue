@@ -68,7 +68,7 @@ async function main() {
 
   // The guest nudge on the results screen opens the login modal.
   const results = new Results({
-    onLoginClick: () => profile.open(),
+    onLoginClick: () => profile.open('signup'), // post-game nudge → ready to create an account
     onChallengeClick: () => mp.open(),
     onArchiveClick: () => archive.open({ today, current }),
   });

@@ -152,7 +152,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=70" />
+    <link rel="stylesheet" href="css/styles.css?v=71" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -428,17 +428,22 @@
           <span class="nudge-cta" aria-hidden="true">›</span>
         </button>
 
-        <h3 class="modal-h">Statistics</h3>
-        <div class="stats-grid">
-          <div class="stat"><span id="stat-played" class="stat-num">0</span><span class="stat-cap">Played</span></div>
-          <div class="stat"><span id="stat-avgguesses" class="stat-num">-</span><span class="stat-cap">Avg guesses</span></div>
-          <div class="stat"><span id="stat-accuracy" class="stat-num">-</span><span class="stat-cap">Avg accuracy</span></div>
-          <div class="stat"><span id="stat-streak" class="stat-num">0</span><span class="stat-cap">Streak</span></div>
-          <div class="stat"><span id="stat-maxstreak" class="stat-num">0</span><span class="stat-cap">Max streak</span></div>
-        </div>
+        <!-- Stats + distribution: shown only to signed-in players (and in
+             local-only mode). Signed-out guests get the account-creation nudge
+             above instead, so stats stay an account perk. -->
+        <div id="results-stats">
+          <h3 class="modal-h">Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat"><span id="stat-played" class="stat-num">0</span><span class="stat-cap">Played</span></div>
+            <div class="stat"><span id="stat-avgguesses" class="stat-num">-</span><span class="stat-cap">Avg guesses</span></div>
+            <div class="stat"><span id="stat-accuracy" class="stat-num">-</span><span class="stat-cap">Avg accuracy</span></div>
+            <div class="stat"><span id="stat-streak" class="stat-num">0</span><span class="stat-cap">Streak</span></div>
+            <div class="stat"><span id="stat-maxstreak" class="stat-num">0</span><span class="stat-cap">Max streak</span></div>
+          </div>
 
-        <h3 class="modal-h">Your guess distribution</h3>
-        <div id="dist-personal" class="dist"></div>
+          <h3 class="modal-h">Your guess distribution</h3>
+          <div id="dist-personal" class="dist"></div>
+        </div>
 
         <div class="results-ctas">
           <a id="coffee-link" class="cta2 cta2--coffee" href="https://buymeacoffee.com/nickreides"
@@ -611,30 +616,30 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=70",
-          "/js/config.js": "/js/config.js?v=70",
-          "/js/color.js": "/js/color.js?v=70",
-          "/js/dom.js": "/js/dom.js?v=70",
-          "/js/rng.js": "/js/rng.js?v=70",
-          "/js/puzzle.js": "/js/puzzle.js?v=70",
-          "/js/storage.js": "/js/storage.js?v=70",
-          "/js/stats.js": "/js/stats.js?v=70",
-          "/js/game.js": "/js/game.js?v=70",
-          "/js/ui.js": "/js/ui.js?v=70",
-          "/js/analytics.js": "/js/analytics.js?v=70",
-          "/js/colorfield.js": "/js/colorfield.js?v=70",
-          "/js/results.js": "/js/results.js?v=70",
-          "/js/auth.js": "/js/auth.js?v=70",
-          "/js/profile.js": "/js/profile.js?v=70",
-          "/js/settings.js": "/js/settings.js?v=70",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=70",
-          "/js/pro.js": "/js/pro.js?v=70",
-          "/js/archive.js": "/js/archive.js?v=70",
-          "/js/proupsell.js": "/js/proupsell.js?v=70",
-          "/js/billing.js": "/js/billing.js?v=70",
-          "/js/pricing.js": "/js/pricing.js?v=70",
-          "/js/toast.js": "/js/toast.js?v=70",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=70"
+          "/js/main.js": "/js/main.js?v=71",
+          "/js/config.js": "/js/config.js?v=71",
+          "/js/color.js": "/js/color.js?v=71",
+          "/js/dom.js": "/js/dom.js?v=71",
+          "/js/rng.js": "/js/rng.js?v=71",
+          "/js/puzzle.js": "/js/puzzle.js?v=71",
+          "/js/storage.js": "/js/storage.js?v=71",
+          "/js/stats.js": "/js/stats.js?v=71",
+          "/js/game.js": "/js/game.js?v=71",
+          "/js/ui.js": "/js/ui.js?v=71",
+          "/js/analytics.js": "/js/analytics.js?v=71",
+          "/js/colorfield.js": "/js/colorfield.js?v=71",
+          "/js/results.js": "/js/results.js?v=71",
+          "/js/auth.js": "/js/auth.js?v=71",
+          "/js/profile.js": "/js/profile.js?v=71",
+          "/js/settings.js": "/js/settings.js?v=71",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=71",
+          "/js/pro.js": "/js/pro.js?v=71",
+          "/js/archive.js": "/js/archive.js?v=71",
+          "/js/proupsell.js": "/js/proupsell.js?v=71",
+          "/js/billing.js": "/js/billing.js?v=71",
+          "/js/pricing.js": "/js/pricing.js?v=71",
+          "/js/toast.js": "/js/toast.js?v=71",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=71"
         }
       }
     </script>

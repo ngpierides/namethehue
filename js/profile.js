@@ -29,8 +29,10 @@ export class Profile {
     });
   }
 
-  open() {
+  /** @param {'login'|'signup'} [mode] preselect the auth form (guests only). */
+  open(mode) {
     this._confirmDelete = false;
+    if (mode) this.authMode = mode;
     this.render(getSession());
     this.el.hidden = false;
   }

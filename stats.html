@@ -195,12 +195,12 @@
         <div class="card"><div class="k">Paying members</div><div class="v accent" id="mem-paid">–</div><div class="sub">active Pro subscriptions</div></div>
         <div class="card"><div class="k">Comped</div><div class="v" id="mem-comp">–</div><div class="sub">free Pro grants</div></div>
         <div class="card"><div class="k">Staff / admin</div><div class="v" id="mem-admin">–</div><div class="sub">admin accounts</div></div>
-        <div class="card"><div class="k">Buy Me a Coffee</div><div class="v" id="bmc">n/a</div><div class="sub">not connected yet</div></div>
+        <div class="card"><div class="k">Stripe balance</div><div class="v accent" id="stripe-bal">–</div><div class="sub" id="stripe-bal-sub">available + pending</div></div>
       </div>
       <p class="desc" style="margin:-6px 0 20px;">
-        Exact revenue ($) isn't shown: the plan/amount isn't stored per member. Wire it up by
-        recording the Stripe amount in the webhook, or a <code>get-revenue</code> Edge Function.
-        Buy Me a Coffee needs a webhook/API token to go live.
+        Balance is live from Stripe (available + pending, per currency — pending = captured but not
+        yet cleared). Per-member plan amounts still aren't stored, so MRR / next-renewal projections
+        aren't shown; add them later via a sum of upcoming subscription invoices if you want them.
       </p>
 
       <div class="panels">
@@ -300,6 +300,8 @@
 
       const $ = (id) => document.getElementById(id);
       const fmt = (n) => (n ?? 0).toLocaleString();
+      const fmtMoney = (minor, cur) =>
+        new Intl.NumberFormat('en', { style: 'currency', currency: (cur || 'usd').toUpperCase() }).format((minor || 0) / 100);
 
       function showSetup(msg) {
         const el = $('setup');
@@ -334,14 +336,38 @@
             `verdict: <code>${ok ? 'PASS ✅ (admin)' : 'FAIL ❌ (would redirect)'}</code>` +
             (err ? `<br>getUser error: <code>${err.message}</code>` : '')
           );
-          if (ok) load(client);
+          if (ok) { load(client); loadRevenue(client); }
           return;
         }
 
         if (!ok) { location.replace(HOME); return; } // not an admin → back to the game
         reveal();
         load(client);
-        setInterval(() => load(client), 60000);
+        loadRevenue(client);
+        setInterval(() => { load(client); loadRevenue(client); }, 60000);
+      }
+
+      // Live Stripe balance for the revenue card (admin-only Edge Function). Kept
+      // separate from the stats RPC: Postgres can't call Stripe, and if one is down
+      // the other still renders. Fails soft to 'n/a'.
+      async function loadRevenue(client) {
+        try {
+          const { data, error } = await client.functions.invoke('get-revenue');
+          const bals = !error && data && !data.error ? (data.balances || []) : null;
+          if (!bals) { $('stripe-bal').textContent = 'n/a'; $('stripe-bal-sub').textContent = 'deploy get-revenue'; return; }
+          if (!bals.length) { $('stripe-bal').textContent = fmtMoney(0, 'usd'); $('stripe-bal-sub').textContent = 'available + pending'; return; }
+          // Show the biggest-total currency as the headline; note any others.
+          const rows = bals.map((b) => ({ ...b, total: b.available + b.pending })).sort((a, b) => b.total - a.total);
+          const main = rows[0];
+          $('stripe-bal').textContent = fmtMoney(main.total, main.currency);
+          const extra = rows.slice(1).filter((b) => b.total).map((b) => fmtMoney(b.total, b.currency)).join(' · ');
+          $('stripe-bal-sub').textContent =
+            `${fmtMoney(main.available, main.currency)} avail · ${fmtMoney(main.pending, main.currency)} pending` +
+            (extra ? ` · +${extra}` : '');
+        } catch {
+          $('stripe-bal').textContent = 'n/a';
+          $('stripe-bal-sub').textContent = 'deploy get-revenue';
+        }
       }
 
       async function load(client) {

@@ -182,6 +182,14 @@
         <div class="card"><div class="k">Games by members</div><div class="v" id="account-games">–</div><div class="sub">from synced history</div></div>
       </div>
 
+      <div class="section-label">Par performance</div>
+      <div class="grid">
+        <div class="card"><div class="k">Solved at/under par</div><div class="v accent" id="par-beat">–</div><div class="sub">of games with a par</div></div>
+        <div class="card"><div class="k">Hole-in-one</div><div class="v gold" id="par-ace">–</div><div class="sub">solved first guess</div></div>
+        <div class="card"><div class="k">Avg guesses</div><div class="v" id="par-avgg">–</div><div class="sub">across all solves</div></div>
+        <div class="card"><div class="k">Avg par</div><div class="v" id="par-avgp">–</div><div class="sub">target to beat</div></div>
+      </div>
+
       <div class="section-label">Supporters &amp; revenue</div>
       <div class="grid">
         <div class="card"><div class="k">Paying members</div><div class="v accent" id="mem-paid">–</div><div class="sub">active Pro subscriptions</div></div>
@@ -217,11 +225,50 @@
         </div>
       </div>
 
+      <div class="panels">
+        <div class="panel">
+          <div class="chart-head">
+            <div>
+              <h2>Views over time</h2>
+              <p class="desc" id="vchart-desc" style="margin:0;">Page views, hour by hour (last 24h).</p>
+            </div>
+            <div class="seg" id="vchart-views"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg class="chart" id="vline" viewBox="0 0 600 190" preserveAspectRatio="none" aria-hidden="true" style="margin-top:14px;"></svg>
+            <div class="chart-tip" id="vchart-tip"></div>
+          </div>
+          <div class="desc" id="vline-foot" style="display:flex;justify-content:space-between;margin-top:6px;"></div>
+        </div>
+        <div class="panel">
+          <div class="chart-head">
+            <div>
+              <h2>New signups</h2>
+              <p class="desc" id="schart-desc" style="margin:0;">New accounts per day (last 7 days).</p>
+            </div>
+            <div class="seg" id="schart-views"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg class="chart" id="sline" viewBox="0 0 600 190" preserveAspectRatio="none" aria-hidden="true" style="margin-top:14px;"></svg>
+            <div class="chart-tip" id="schart-tip"></div>
+          </div>
+          <div class="desc" id="sline-foot" style="display:flex;justify-content:space-between;margin-top:6px;"></div>
+        </div>
+      </div>
+
       <div class="panels" style="grid-template-columns:1fr;">
         <div class="panel" style="min-height:auto;">
           <h2>Who's playing</h2>
           <p class="desc">Account holders vs. anonymous players.</p>
           <div class="split" id="split"></div>
+        </div>
+      </div>
+
+      <div class="panels" style="grid-template-columns:1fr;">
+        <div class="panel" style="min-height:auto;">
+          <h2>Current streaks</h2>
+          <p class="desc">Days in a row account holders are on. Signed-in players only (anonymous play isn't tracked per person).</p>
+          <div class="bars" id="streaks"></div>
         </div>
       </div>
 
@@ -363,9 +410,21 @@
         $('play-rate-human').textContent =
           humans && gamesSince != null ? Math.round((gamesSince / humans) * 100) + '%' : '–';
 
+        // Par performance
+        $('par-beat').textContent = d.par_beat_pct == null ? '–' : d.par_beat_pct + '%';
+        $('par-ace').textContent = d.hole_in_one_pct == null ? '–' : d.hole_in_one_pct + '%';
+        $('par-avgg').textContent = d.avg_guesses ?? '–';
+        $('par-avgp').textContent = d.avg_par ?? '–';
+
         chartSeries.hour = d.per_hour || [];
         chartSeries.day = d.per_day || [];
-        drawChart();
+        viewsSeries.hour = d.views_per_hour || [];
+        viewsSeries.day = d.views_per_day || [];
+        signupSeries.day = d.signups_per_day || [];
+        gamesChart.draw();
+        viewsChart.draw();
+        signupChart.draw();
+        drawStreaks(d.streak_dist || []);
         drawDist(d.guess_dist || []);
         drawSplit(d.logged_in || 0, d.anonymous || 0);
         refSeries.all = d.referrers || [];
@@ -413,104 +472,143 @@
           </div>`).join('');
       }
 
-      // Games-over-time chart. Two series come from the RPC — per_hour (48 zero-
-      // filled hourly buckets) and per_day (28 daily) — and the view buttons just
-      // slice one of them, so switching views is instant with no re-fetch.
-      const VIEWS = [
-        { k: '24h', label: '24h', desc: 'Completed games, hour by hour (last 24h).', rows: () => chartSeries.hour.slice(-24) },
-        { k: '48h', label: '48h', desc: 'Completed games, hour by hour (last 48h).', rows: () => chartSeries.hour.slice(-48) },
-        { k: '7d',  label: '7d',  desc: 'Completed games per day (last 7 days).',     rows: () => chartSeries.day.slice(-7) },
-        { k: '28d', label: '28d', desc: 'Completed games per day (last 28 days).',    rows: () => chartSeries.day },
-      ];
-      let chartSeries = { hour: [], day: [] };
-      let chartView = '24h';
-      let chartRows = [];
-      let chartXY = null;
+      // Reusable line chart with a view toggle + hover tooltip. Each instance owns
+      // its DOM ids, its series, and its own state (so games/views/signups don't
+      // collide). Series are set on module-level objects the view.rows() close over.
       const CHART_H = 190;
+      let chartSeries = { hour: [], day: [] };
+      let viewsSeries = { hour: [], day: [] };
+      let signupSeries = { day: [] };
 
-      function initChart() {
-        if (initChart.done) return;
-        initChart.done = true;
-        const el = $('chart-views');
-        el.innerHTML = VIEWS.map((v) => `<button data-k="${v.k}">${v.label}</button>`).join('');
-        el.addEventListener('click', (e) => {
-          const b = e.target.closest('button');
-          if (!b) return;
-          chartView = b.dataset.k;
-          drawChart();
-        });
-        const svg = $('line');
-        svg.addEventListener('pointermove', chartMove);
-        svg.addEventListener('pointerleave', chartLeave);
-      }
+      function makeChart(cfg) {
+        let view = cfg.views[0].k;
+        let rows = [];
+        let xy = null;
+        let wired = false;
+        const el = (id) => document.getElementById(id);
 
-      function drawChart() {
-        initChart();
-        const view = VIEWS.find((v) => v.k === chartView) || VIEWS[0];
-        document.querySelectorAll('#chart-views button').forEach((b) => b.classList.toggle('on', b.dataset.k === chartView));
-        $('chart-desc').textContent = view.desc;
-        const rows = view.rows();
-        chartRows = rows;
-        const svg = $('line');
-        const foot = $('line-foot');
-        chartLeave();
-        svg.innerHTML = '';
-        if (rows.length < 2) {
-          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet for this range</text>`;
-          foot.innerHTML = '';
-          chartXY = null;
-          return;
+        function draw() {
+          if (!wired) {
+            wired = true;
+            const seg = el(cfg.segId);
+            seg.innerHTML = cfg.views.map((v) => `<button data-k="${v.k}">${v.label}</button>`).join('');
+            seg.addEventListener('click', (e) => {
+              const b = e.target.closest('button');
+              if (!b) return;
+              view = b.dataset.k;
+              draw();
+            });
+            const svg = el(cfg.svgId);
+            svg.addEventListener('pointermove', move);
+            svg.addEventListener('pointerleave', leave);
+          }
+          const v = cfg.views.find((x) => x.k === view) || cfg.views[0];
+          document.querySelectorAll(`#${cfg.segId} button`).forEach((b) => b.classList.toggle('on', b.dataset.k === view));
+          el(cfg.descId).textContent = v.desc;
+          rows = v.rows();
+          const svg = el(cfg.svgId);
+          const foot = el(cfg.footId);
+          leave();
+          svg.innerHTML = '';
+          if (rows.length < 2) {
+            svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet for this range</text>`;
+            foot.innerHTML = '';
+            xy = null;
+            return;
+          }
+          const W = 600, H = CHART_H, pad = 10;
+          const ns = rows.map((r) => r.n);
+          const max = Math.max(...ns, 1);
+          const x = (i) => pad + (i * (W - pad * 2)) / (rows.length - 1);
+          const y = (val) => H - pad - (val / max) * (H - pad * 2);
+          xy = { x, y };
+          const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.n).toFixed(1)}`).join(' ');
+          const area = `${line} L${x(rows.length - 1).toFixed(1)},${H - pad} L${x(0).toFixed(1)},${H - pad} Z`;
+          const peakIdx = ns.indexOf(max);
+          const gid = `fill-${cfg.svgId}`;
+          svg.innerHTML = `
+            <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#c0472d" stop-opacity="0.28"/>
+              <stop offset="1" stop-color="#c0472d" stop-opacity="0"/>
+            </linearGradient></defs>
+            <path d="${area}" fill="url(#${gid})"/>
+            <path d="${line}" fill="none" stroke="#c0472d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <line class="hv-line" x1="0" y1="${pad}" x2="0" y2="${H - pad}" stroke="#c0472d" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+            <circle class="hv-dot" r="3.5" fill="#c0472d" opacity="0"/>
+            <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#c0472d"/>`;
+          foot.innerHTML = `<span>${rows[0].d}</span><span>peak ${fmt(max)}</span><span>${rows[rows.length - 1].d}</span>`;
         }
-        const W = 600, H = CHART_H, pad = 10;
-        const ns = rows.map((r) => r.n);
-        const max = Math.max(...ns, 1);
-        const x = (i) => pad + (i * (W - pad * 2)) / (rows.length - 1);
-        const y = (v) => H - pad - (v / max) * (H - pad * 2);
-        chartXY = { x, y };
-        const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.n).toFixed(1)}`).join(' ');
-        const area = `${line} L${x(rows.length - 1).toFixed(1)},${H - pad} L${x(0).toFixed(1)},${H - pad} Z`;
-        const peakIdx = ns.indexOf(max);
-        svg.innerHTML = `
-          <defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stop-color="#c0472d" stop-opacity="0.28"/>
-            <stop offset="1" stop-color="#c0472d" stop-opacity="0"/>
-          </linearGradient></defs>
-          <path d="${area}" fill="url(#fill)"/>
-          <path d="${line}" fill="none" stroke="#c0472d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-          <line id="hv-line" x1="0" y1="${pad}" x2="0" y2="${H - pad}" stroke="#c0472d" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
-          <circle id="hv-dot" r="3.5" fill="#c0472d" opacity="0"/>
-          <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#c0472d"/>`;
-        foot.innerHTML = `<span>${rows[0].d}</span><span>peak ${max}</span><span>${rows[rows.length - 1].d}</span>`;
+
+        // Hover: nearest point by x-fraction (works despite preserveAspectRatio="none",
+        // which stretches viewBox units, so we map from the on-screen bounding rect).
+        function move(e) {
+          if (!xy || rows.length < 2) return;
+          const svg = el(cfg.svgId);
+          const rect = svg.getBoundingClientRect();
+          const t = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+          const i = Math.round(t * (rows.length - 1));
+          const r = rows[i];
+          if (!r) return;
+          const vx = xy.x(i), vy = xy.y(r.n);
+          const hl = svg.querySelector('.hv-line'), hd = svg.querySelector('.hv-dot');
+          if (hl) { hl.setAttribute('x1', vx); hl.setAttribute('x2', vx); hl.setAttribute('opacity', '.5'); }
+          if (hd) { hd.setAttribute('cx', vx); hd.setAttribute('cy', vy); hd.setAttribute('opacity', '1'); }
+          const tip = el(cfg.tipId);
+          const wrap = svg.parentElement.getBoundingClientRect();
+          tip.style.left = (rect.left - wrap.left + rect.width * (i / (rows.length - 1))) + 'px';
+          tip.style.top = (rect.top - wrap.top + rect.height * (vy / CHART_H)) + 'px';
+          tip.textContent = `${r.d} · ${fmt(r.n)} ${cfg.noun}${r.n === 1 ? '' : 's'}`;
+          tip.style.display = 'block';
+        }
+
+        function leave() {
+          const svg = el(cfg.svgId);
+          const hl = svg.querySelector('.hv-line'), hd = svg.querySelector('.hv-dot'), tip = el(cfg.tipId);
+          if (hl) hl.setAttribute('opacity', '0');
+          if (hd) hd.setAttribute('opacity', '0');
+          if (tip) tip.style.display = 'none';
+        }
+
+        return { draw };
       }
 
-      // Hover: nearest point by x-fraction (works despite preserveAspectRatio="none",
-      // which stretches viewBox units, so we map from the on-screen bounding rect).
-      function chartMove(e) {
-        if (!chartXY || chartRows.length < 2) return;
-        const svg = $('line');
-        const rect = svg.getBoundingClientRect();
-        const t = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-        const i = Math.round(t * (chartRows.length - 1));
-        const r = chartRows[i];
-        if (!r) return;
-        const vx = chartXY.x(i), vy = chartXY.y(r.n);
-        const hl = svg.querySelector('#hv-line'), hd = svg.querySelector('#hv-dot');
-        if (hl) { hl.setAttribute('x1', vx); hl.setAttribute('x2', vx); hl.setAttribute('opacity', '.5'); }
-        if (hd) { hd.setAttribute('cx', vx); hd.setAttribute('cy', vy); hd.setAttribute('opacity', '1'); }
-        const tip = $('chart-tip');
-        const wrap = svg.parentElement.getBoundingClientRect();
-        tip.style.left = (rect.left - wrap.left + rect.width * (i / (chartRows.length - 1))) + 'px';
-        tip.style.top = (rect.top - wrap.top + rect.height * (vy / CHART_H)) + 'px';
-        tip.textContent = `${r.d} · ${fmt(r.n)} game${r.n === 1 ? '' : 's'}`;
-        tip.style.display = 'block';
-      }
+      const gamesChart = makeChart({
+        svgId: 'line', segId: 'chart-views', descId: 'chart-desc', footId: 'line-foot', tipId: 'chart-tip', noun: 'game',
+        views: [
+          { k: '24h', label: '24h', desc: 'Completed games, hour by hour (last 24h).', rows: () => chartSeries.hour.slice(-24) },
+          { k: '48h', label: '48h', desc: 'Completed games, hour by hour (last 48h).', rows: () => chartSeries.hour.slice(-48) },
+          { k: '7d',  label: '7d',  desc: 'Completed games per day (last 7 days).',     rows: () => chartSeries.day.slice(-7) },
+          { k: '28d', label: '28d', desc: 'Completed games per day (last 28 days).',    rows: () => chartSeries.day },
+        ],
+      });
+      const viewsChart = makeChart({
+        svgId: 'vline', segId: 'vchart-views', descId: 'vchart-desc', footId: 'vline-foot', tipId: 'vchart-tip', noun: 'view',
+        views: [
+          { k: '24h', label: '24h', desc: 'Page views, hour by hour (last 24h).', rows: () => viewsSeries.hour.slice(-24) },
+          { k: '48h', label: '48h', desc: 'Page views, hour by hour (last 48h).', rows: () => viewsSeries.hour.slice(-48) },
+          { k: '7d',  label: '7d',  desc: 'Page views per day (last 7 days).',     rows: () => viewsSeries.day.slice(-7) },
+          { k: '28d', label: '28d', desc: 'Page views per day (last 28 days).',    rows: () => viewsSeries.day },
+        ],
+      });
+      const signupChart = makeChart({
+        svgId: 'sline', segId: 'schart-views', descId: 'schart-desc', footId: 'sline-foot', tipId: 'schart-tip', noun: 'signup',
+        views: [
+          { k: '7d',  label: '7d',  desc: 'New accounts per day (last 7 days).',  rows: () => signupSeries.day.slice(-7) },
+          { k: '28d', label: '28d', desc: 'New accounts per day (last 28 days).', rows: () => signupSeries.day },
+        ],
+      });
 
-      function chartLeave() {
-        const svg = $('line');
-        const hl = svg.querySelector('#hv-line'), hd = svg.querySelector('#hv-dot'), tip = $('chart-tip');
-        if (hl) hl.setAttribute('opacity', '0');
-        if (hd) hd.setAttribute('opacity', '0');
-        if (tip) tip.style.display = 'none';
+      function drawStreaks(rows) {
+        const el = $('streaks');
+        if (!rows.length) { el.innerHTML = `<div class="desc">No account streaks yet.</div>`; return; }
+        const byB = {};
+        rows.forEach((r) => { const b = r.s >= 7 ? '7+' : String(r.s); byB[b] = (byB[b] || 0) + r.n; });
+        const keys = ['0', '1', '2', '3', '4', '5', '6', '7+'];
+        const max = Math.max(...keys.map((k) => byB[k] || 0), 1);
+        el.innerHTML = keys.map((k) => {
+          const n = byB[k] || 0;
+          return `<div class="bar-row"><span>${k}</span><div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%"></div></div><span class="bar-n">${n}</span></div>`;
+        }).join('');
       }
 
       function drawDist(rows) {

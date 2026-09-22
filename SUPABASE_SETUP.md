@@ -694,7 +694,38 @@ begin
                        group by 1) s),
     'guess_dist', (select coalesce(json_agg(json_build_object('g', g, 'n', n) order by g), '[]'::json)
                     from (select guesses as g, count(*) as n from game_events
-                          where guesses is not null group by 1) s)
+                          where guesses is not null group by 1) s),
+    -- Par performance: how the field is doing against each day's target guesses.
+    -- Only rows that recorded a par count (older solves may have null par).
+    'par_beat_pct', (select case when count(*) = 0 then null
+                       else round(100.0 * count(*) filter (where guesses <= par) / count(*)) end
+                     from game_events where par is not null and guesses is not null),
+    'hole_in_one_pct', (select case when count(*) = 0 then null
+                          else round(100.0 * count(*) filter (where guesses = 1) / count(*)) end
+                        from game_events where guesses is not null),
+    'avg_par', (select round(avg(par), 2) from game_events where par is not null),
+    -- Page views over time (mirrors per_hour/per_day but from page_views) so the
+    -- dashboard can chart views next to games and eyeball conversion.
+    'views_per_hour', (select coalesce(json_agg(json_build_object('d', to_char(h, 'MM/DD HH24:00'), 'n', n) order by h), '[]'::json)
+                        from (select gs as h, coalesce(c.n, 0) as n
+                              from generate_series(date_trunc('hour', now()) - interval '47 hours',
+                                                   date_trunc('hour', now()), interval '1 hour') gs
+                              left join (select date_trunc('hour', created_at) as hh, count(*) as n
+                                         from page_views where created_at > now() - interval '48 hours'
+                                         group by 1) c on c.hh = gs) s),
+    'views_per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
+                       from (select date_trunc('day', created_at)::date as d, count(*) as n
+                             from page_views where created_at > now() - interval '28 days'
+                             group by 1) s),
+    -- New signups per day (28d, zero-filled) from auth.users — the growth curve.
+    'signups_per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
+                         from (select gs::date as d, coalesce(c.n, 0) as n
+                               from generate_series((now() - interval '27 days')::date, now()::date, interval '1 day') gs
+                               left join (select date_trunc('day', created_at)::date as dd, count(*) as n
+                                          from auth.users group by 1) c on c.dd = gs::date) s),
+    -- Current-streak distribution across account holders (bucketed in the client).
+    'streak_dist', (select coalesce(json_agg(json_build_object('s', s, 'n', n) order by s), '[]'::json)
+                     from (select current_streak as s, count(*) as n from player_stats group by 1) s)
   ));
 end;
 $$;

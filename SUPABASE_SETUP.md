@@ -405,7 +405,14 @@ supabase secrets set STRIPE_SECRET_KEY=sk_test_xxx STRIPE_PRICE_ID=price_monthly
 supabase functions deploy create-checkout
 supabase functions deploy get-prices          # powers the real prices shown in the UI
 supabase functions deploy stripe-webhook --no-verify-jwt   # Stripe isn't a Supabase user
+supabase functions deploy delete-account      # powers the profile's "Delete account" button
 ```
+
+> **`delete-account` needs no Stripe.** It works as soon as auth (Steps 1–5) is set
+> up — deploy it even if you never charge for Pro. It deletes the caller's own auth
+> user (their `player_stats` row cascades away via the FK) and, *if* `STRIPE_SECRET_KEY`
+> is set and they have a live subscription, cancels it first so a deleted account is
+> never billed again.
 
 ### 9d. Wire up the webhook
 

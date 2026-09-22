@@ -10,6 +10,7 @@ import {
   signIn,
   signUp,
   signOut,
+  deleteAccount,
 } from './auth.js';
 import { getPersonalStats } from './stats.js';
 import { escapeHtml } from './dom.js';
@@ -29,11 +30,13 @@ export class Profile {
   }
 
   open() {
+    this._confirmDelete = false;
     this.render(getSession());
     this.el.hidden = false;
   }
 
   close() {
+    this._confirmDelete = false;
     this.el.hidden = true;
   }
 
@@ -83,11 +86,33 @@ export class Profile {
       <p class="profile-hint">Change your display name in Settings.</p>
       ${statsGrid()}
       ${adminLink}
-      <button id="signout-btn" class="btn btn--wide">Log out</button>`;
+      <button id="signout-btn" class="btn btn--wide">Log out</button>
+      <button id="delete-account" class="set-danger profile-delete" type="button">
+        ${this._confirmDelete ? 'Tap again to permanently delete' : 'Delete account'}
+      </button>
+      <p id="delete-msg" class="auth-msg" role="alert"></p>`;
 
     this.body.querySelector('#signout-btn').addEventListener('click', async (e) => {
       e.target.disabled = true;
       await signOut();
+    });
+
+    // Delete account: irreversible, so two taps to confirm.
+    const delBtn = this.body.querySelector('#delete-account');
+    delBtn.addEventListener('click', async () => {
+      if (!this._confirmDelete) { this._confirmDelete = true; this.render(getSession()); return; }
+      const msg = this.body.querySelector('#delete-msg');
+      delBtn.disabled = true;
+      delBtn.textContent = 'Deleting…';
+      try {
+        await deleteAccount(); // signs out on success → onAuth repaints the login form
+      } catch (err) {
+        this._confirmDelete = false;
+        msg.className = 'auth-msg auth-msg--error';
+        msg.textContent = err?.message || 'Could not delete your account.';
+        delBtn.disabled = false;
+        delBtn.textContent = 'Delete account';
+      }
     });
   }
 

@@ -20,6 +20,13 @@ export class Results {
     this.countdownTimer = null;
     this.onLoginClick = opts.onLoginClick;
     this.onChallengeClick = opts.onChallengeClick;
+    this.onArchiveClick = opts.onArchiveClick;
+
+    // "Play past puzzles" jumps to the Archive (which itself gates on Pro).
+    document.getElementById('results-archive').addEventListener('click', () => {
+      this.close();
+      this.onArchiveClick?.();
+    });
 
     // "Challenge a friend" jumps from the results screen into multiplayer.
     document.getElementById('mp-invite-btn').addEventListener('click', () => {
@@ -102,6 +109,10 @@ export class Results {
     // Support link - only after a win or loss, not when peeking at stats mid-game.
     document.getElementById('coffee-link').hidden = !over;
 
+    // Archive CTA - same "post-game only" rule. The Archive shows the Pro upsell
+    // to free players, so this doubles as the results-screen funnel into Pro.
+    document.getElementById('results-archive').hidden = !over;
+
     // Nudge guests to log in - only when cloud login is available but nobody's
     // signed in. (Hidden in local-only mode, where there's nothing to log into.)
     // On a real streak, loss-frame it (the one thing a daily player fears losing);
@@ -113,10 +124,10 @@ export class Results {
       const sub = nudge.querySelector('.nudge-sub');
       if (s.curStreak >= 2) {
         strong.textContent = `You're on a ${s.curStreak}-day streak`;
-        sub.textContent = "Stats aren't saved without an account, so create a free one to keep them.";
+        sub.textContent = 'Create a free account to keep it.';
       } else {
         strong.textContent = "Your stats aren't being saved";
-        sub.textContent = 'Create a free account to save your stats and streak across devices.';
+        sub.textContent = 'Save your stats & streak across devices.';
       }
     }
   }

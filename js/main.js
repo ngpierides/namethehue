@@ -70,6 +70,7 @@ async function main() {
   const results = new Results({
     onLoginClick: () => profile.open(),
     onChallengeClick: () => mp.open(),
+    onArchiveClick: () => archive.open({ today, current }),
   });
 
   // One shared "Get Name the Hue Pro" popup for every gated feature (archive +

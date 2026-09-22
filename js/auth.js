@@ -188,6 +188,19 @@ export async function signOut() {
   if (client) await client.auth.signOut();
 }
 
+/**
+ * Permanently delete the signed-in player's account (via the delete-account Edge
+ * Function), then sign out locally. The server drops their cloud stats row and
+ * cancels any live subscription; signOut() clears the local session + stats copy.
+ */
+export async function deleteAccount() {
+  if (!client || !session) throw new Error('Not logged in.');
+  const { data, error } = await client.functions.invoke('delete-account', {});
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  await signOut();
+}
+
 /** Set the logged-in user's display name, then push it to their stats row. */
 export async function updateDisplayName(name) {
   const { data, error } = await client.auth.updateUser({ data: { display_name: name } });

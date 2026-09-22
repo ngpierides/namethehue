@@ -652,6 +652,12 @@ begin
     'referrers', (select coalesce(json_agg(json_build_object('ref', ref, 'n', n) order by n desc), '[]'::json)
                    from (select coalesce(nullif(referrer, ''), 'direct') as ref, count(*) as n
                          from page_views group by 1 order by 2 desc limit 10) s),
+    -- Games completed SINCE user-agent tracking began (the first UA-logged view),
+    -- so "human play rate" divides games and human views over the same window
+    -- instead of all-time games ÷ post-migration views (which exceeds 100%).
+    'games_since_tracking', (select count(*) from game_events
+                             where created_at >= (select min(created_at) from page_views
+                                                  where user_agent is not null)),
     'per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
                  from (select date_trunc('day', created_at)::date as d, count(*) as n
                        from game_events where created_at > now() - interval '28 days'

@@ -150,7 +150,7 @@
         <div class="card"><div class="k">Human views</div><div class="v" id="pv-human">–</div><div class="sub" id="pv-human-sub">non-bot user agents</div></div>
         <div class="card"><div class="k">Bot views</div><div class="v" id="pv-bot">–</div><div class="sub">crawlers &amp; scanners</div></div>
         <div class="card"><div class="k">Bot share</div><div class="v gold" id="pv-botpct">–</div><div class="sub">of all page views</div></div>
-        <div class="card"><div class="k">Human play rate</div><div class="v gold" id="play-rate-human">–</div><div class="sub">games ÷ human views</div></div>
+        <div class="card"><div class="k">Human play rate</div><div class="v gold" id="play-rate-human">–</div><div class="sub">games ÷ human views, since tracking</div></div>
       </div>
 
       <div class="section-label">All time</div>
@@ -307,8 +307,12 @@
           pvTotal && bots != null ? Math.round((bots / pvTotal) * 100) + '%' : '–';
         $('pv-human-sub').textContent =
           humans == null ? 'awaiting user_agent migration' : 'non-bot user agents';
-        // The play rate that actually matters: games ÷ HUMAN views.
-        $('play-rate-human').textContent = humans ? Math.round((total / humans) * 100) + '%' : '–';
+        // The play rate that actually matters: games ÷ HUMAN views, both counted
+        // since user-agent tracking began (so it's not all-time games over
+        // post-migration views, which would exceed 100%).
+        const gamesSince = d.games_since_tracking;
+        $('play-rate-human').textContent =
+          humans && gamesSince != null ? Math.round((gamesSince / humans) * 100) + '%' : '–';
 
         drawLine(d.per_day || []);
         drawDist(d.guess_dist || []);

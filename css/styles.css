@@ -624,12 +624,13 @@ body {
 /* Guest account-creation block on the results screen */
 #results-signup {
   margin: 4px 0 8px;
-  padding: 16px 0 8px;
+  padding: 0 0 8px;
 }
-/* When no outcome sits above it (stats icon opened by a guest), the box is the
-   first thing in the card - push it clear of the absolutely-placed close X. */
+/* When no outcome sits above it (stats icon opened by a guest), the block is the
+   first thing in the card - sit its (left-aligned) heading tight to the top; the
+   close ✕ is off to the right and clears it. */
 #results-outcome[hidden] + #results-signup {
-  margin-top: 24px;
+  margin-top: 2px;
 }
 .results-signup-h {
   margin: 0;
@@ -866,18 +867,27 @@ body {
   background: var(--line);
   color: var(--ink);
 }
+/* Section labels inside a modal - the page's small-caps eyebrow style, so they
+   read as subordinate to the modal's own title. */
 .modal-h {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--ink-soft);
   text-align: center;
-  margin: 20px 0 14px;
+  margin: 22px 0 12px;
 }
-/* The modal title sits right under the close ✕ - pull it up tight. */
+/* The modal's main title (directly under the close ✕): the display heading,
+   pulled up tight to the top. */
 .modal-close + .modal-h {
-  margin-top: 2px;
+  font-family: var(--font-display);
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin: 2px 0 16px;
 }
 
 /* Outcome header */

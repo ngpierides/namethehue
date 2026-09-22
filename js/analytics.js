@@ -36,9 +36,27 @@ export async function logGameCompleted({ day, guesses, par, mode }) {
 }
 
 /**
+ * Where a load came from, as a coarse label (no full URL, no query string):
+ * 'direct' (typed/bookmark), 'internal' (navigated within the site), or the
+ * bare hostname of an external referrer (e.g. 'www.google.com', 't.co'). This
+ * is what lets the dashboard answer "search vs shared link vs direct".
+ */
+function referrerLabel() {
+  const ref = document.referrer;
+  if (!ref) return 'direct';
+  try {
+    const host = new URL(ref).hostname;
+    return host === location.hostname ? 'internal' : host;
+  } catch {
+    return 'direct';
+  }
+}
+
+/**
  * Record one page view. Best-effort, fire-and-forget — call once per page load.
- * Stores nothing personal: just a timestamp (server default) and the path, so
- * the admin dashboard can show traffic without cookies or a user id.
+ * Stores a timestamp, the path, the user-agent (so the dashboard can separate
+ * bots from humans), and a coarse referrer label — no cookies, no user id, no
+ * IP, and never the query string (room codes / ?day previews stay out).
  */
 export async function logPageView() {
   if (!isConfigured()) return;
@@ -46,9 +64,12 @@ export async function logPageView() {
     const client = await getSupabaseClient();
     if (!client) return;
     // Write-only like game_events (RLS has an insert policy but no read policy),
-    // so no .select() is chained. Path only — never query strings, which can
-    // carry room codes / ?day previews we don't want to store.
-    await client.from('page_views').insert({ path: location.pathname });
+    // so no .select() is chained.
+    await client.from('page_views').insert({
+      path: location.pathname,
+      user_agent: navigator.userAgent,
+      referrer: referrerLabel(),
+    });
   } catch {
     /* telemetry must never break the game */
   }

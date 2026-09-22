@@ -146,6 +146,12 @@
         <div class="card"><div class="k">Views · last 7 days</div><div class="v" id="pv-7d">–</div><div class="sub">rolling week</div></div>
         <div class="card"><div class="k">Play rate</div><div class="v gold" id="play-rate">–</div><div class="sub">games ÷ views</div></div>
       </div>
+      <div class="grid">
+        <div class="card"><div class="k">Human views</div><div class="v" id="pv-human">–</div><div class="sub" id="pv-human-sub">non-bot user agents</div></div>
+        <div class="card"><div class="k">Bot views</div><div class="v" id="pv-bot">–</div><div class="sub">crawlers &amp; scanners</div></div>
+        <div class="card"><div class="k">Bot share</div><div class="v gold" id="pv-botpct">–</div><div class="sub">of all page views</div></div>
+        <div class="card"><div class="k">Human play rate</div><div class="v gold" id="play-rate-human">–</div><div class="sub">games ÷ human views</div></div>
+      </div>
 
       <div class="section-label">All time</div>
       <div class="grid">
@@ -180,6 +186,14 @@
           <h2>Who's playing</h2>
           <p class="desc">Account holders vs. anonymous players.</p>
           <div class="split" id="split"></div>
+        </div>
+      </div>
+
+      <div class="panels" style="grid-template-columns:1fr;">
+        <div class="panel" style="min-height:auto;">
+          <h2>Top referrers</h2>
+          <p class="desc">Where page views came from. "direct" = typed/bookmarked, "internal" = navigation within the site.</p>
+          <div id="referrers"></div>
         </div>
       </div>
 
@@ -283,9 +297,38 @@
           d.page_views_30m == null ? 'awaiting page_views migration' : fmt(d.page_views_30m) + ' in last 30 min';
         $('play-rate').textContent = pvTotal ? Math.round((total / pvTotal) * 100) + '%' : '–';
 
+        // Human vs bot split (by user-agent). Rows logged before the migration
+        // have no user_agent, so humans + bots can be < total; that's expected.
+        const humans = d.page_views_humans;
+        const bots = d.page_views_bots;
+        $('pv-human').textContent = pv(humans);
+        $('pv-bot').textContent = pv(bots);
+        $('pv-botpct').textContent =
+          pvTotal && bots != null ? Math.round((bots / pvTotal) * 100) + '%' : '–';
+        $('pv-human-sub').textContent =
+          humans == null ? 'awaiting user_agent migration' : 'non-bot user agents';
+        // The play rate that actually matters: games ÷ HUMAN views.
+        $('play-rate-human').textContent = humans ? Math.round((total / humans) * 100) + '%' : '–';
+
         drawLine(d.per_day || []);
         drawDist(d.guess_dist || []);
         drawSplit(d.logged_in || 0, d.anonymous || 0);
+        drawReferrers(d.referrers || []);
+      }
+
+      function drawReferrers(rows) {
+        const el = $('referrers');
+        if (!rows.length) {
+          el.innerHTML = `<div class="desc">No referrer data yet (awaiting the page_views migration, or no views logged since).</div>`;
+          return;
+        }
+        const max = Math.max(...rows.map((r) => r.n), 1);
+        el.innerHTML = rows.map((r) => `
+          <div style="display:grid;grid-template-columns:130px 1fr 56px;align-items:center;gap:10px;margin:6px 0;font-size:.82rem;">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.ref}">${r.ref}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${(r.n / max) * 100}%"></div></div>
+            <span class="bar-n" style="text-align:right;">${fmt(r.n)}</span>
+          </div>`).join('');
       }
 
       function drawLine(rows) {

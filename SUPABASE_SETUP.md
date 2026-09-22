@@ -558,8 +558,14 @@ in `main.js`. Run this once in the **SQL Editor** (before re-running the
 create table if not exists public.page_views (
   id          bigint generated always as identity primary key,
   created_at  timestamptz not null default now(),
-  path        text
+  path        text,
+  user_agent  text,   -- to separate bots from humans on the dashboard
+  referrer    text    -- coarse label: 'direct' | 'internal' | external hostname
 );
+
+-- If you created page_views before these two columns existed, add them:
+alter table public.page_views add column if not exists user_agent text;
+alter table public.page_views add column if not exists referrer text;
 
 alter table public.page_views enable row level security;
 
@@ -572,10 +578,13 @@ create policy "anyone can log a page view" on public.page_views
 create index if not exists page_views_created_idx on public.page_views (created_at);
 ```
 
-> **Privacy:** only a timestamp and the URL *path* (e.g. `/`, `/terms.html`) are
-> stored — never the query string (so room codes / `?day=` previews aren't kept),
-> no user id, no IP. Until you run this migration, `logPageView()` fails silently
-> and the dashboard's Traffic cards show "–".
+> **Privacy:** a timestamp, the URL *path* (e.g. `/`, `/terms.html`), the browser
+> user-agent string, and a coarse referrer label (`direct` / `internal` / an
+> external hostname like `t.co`) are stored — never the query string (so room
+> codes / `?day=` previews aren't kept), never a full referring URL, no user id,
+> no IP. The user-agent is what lets the dashboard tell bot traffic from human.
+> Until you run this migration, `logPageView()` fails silently and the
+> dashboard's Traffic cards show "–".
 
 ### Reading it (dashboard → SQL Editor)
 
@@ -634,6 +643,15 @@ begin
     'page_views_30m',   (select count(*) from page_views where created_at > now() - interval '30 minutes'),
     'page_views_24h',   (select count(*) from page_views where created_at > now() - interval '24 hours'),
     'page_views_7d',    (select count(*) from page_views where created_at > now() - interval '7 days'),
+    -- Bot vs human by user-agent. Rows logged before the user_agent migration
+    -- are NULL and count as neither (so humans + bots can be < total).
+    'page_views_bots',   (select count(*) from page_views
+                          where user_agent ~* '(bot|crawl|spider|slurp|scan|preview|headless|lighthouse|monitor|python|curl|wget|axios|okhttp|java|go-http|node-fetch|facebookexternalhit|embedly|whatsapp|telegram|discord|slack)'),
+    'page_views_humans', (select count(*) from page_views
+                          where user_agent is not null and user_agent !~* '(bot|crawl|spider|slurp|scan|preview|headless|lighthouse|monitor|python|curl|wget|axios|okhttp|java|go-http|node-fetch|facebookexternalhit|embedly|whatsapp|telegram|discord|slack)'),
+    'referrers', (select coalesce(json_agg(json_build_object('ref', ref, 'n', n) order by n desc), '[]'::json)
+                   from (select coalesce(nullif(referrer, ''), 'direct') as ref, count(*) as n
+                         from page_views group by 1 order by 2 desc limit 10) s),
     'per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
                  from (select date_trunc('day', created_at)::date as d, count(*) as n
                        from game_events where created_at > now() - interval '28 days'

@@ -152,7 +152,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=67" />
+    <link rel="stylesheet" href="css/styles.css?v=68" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -440,24 +440,17 @@
         <h3 class="modal-h">Your guess distribution</h3>
         <div id="dist-personal" class="dist"></div>
 
-        <a id="coffee-link" class="coffee" href="https://buymeacoffee.com/nickreides"
-           target="_blank" rel="noopener" hidden>
-          <span class="coffee-cup" aria-hidden="true">☕</span>
-          <span class="coffee-text">
-            <strong>Enjoying the daily colour?</strong>
-            <span class="coffee-sub">Buy me a coffee to keep it going.</span>
-          </span>
-          <span class="coffee-cta" aria-hidden="true">›</span>
-        </a>
-
-        <button id="results-archive" class="nudge" type="button" hidden>
-          <span class="nudge-flame" aria-hidden="true">🗂️</span>
-          <span class="nudge-text">
-            <strong>Play past puzzles</strong>
-            <span class="nudge-sub">Browse and replay past days.</span>
-          </span>
-          <span class="nudge-cta" aria-hidden="true">›</span>
-        </button>
+        <div class="results-ctas">
+          <a id="coffee-link" class="cta2 cta2--coffee" href="https://buymeacoffee.com/nickreides"
+             target="_blank" rel="noopener" hidden>
+            <span class="cta2-ico" aria-hidden="true">☕</span>
+            <span class="cta2-t">Buy me a coffee</span>
+          </a>
+          <button id="results-archive" class="cta2 cta2--archive" type="button" hidden>
+            <span class="cta2-ico" aria-hidden="true">🗂️</span>
+            <span class="cta2-t">Play past puzzles</span>
+          </button>
+        </div>
 
         <button id="mp-invite-btn" class="mp-cta mp-cta--block" type="button">🎮 Challenge a friend to this</button>
 
@@ -618,33 +611,41 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=67",
-          "/js/config.js": "/js/config.js?v=67",
-          "/js/color.js": "/js/color.js?v=67",
-          "/js/dom.js": "/js/dom.js?v=67",
-          "/js/rng.js": "/js/rng.js?v=67",
-          "/js/puzzle.js": "/js/puzzle.js?v=67",
-          "/js/storage.js": "/js/storage.js?v=67",
-          "/js/stats.js": "/js/stats.js?v=67",
-          "/js/game.js": "/js/game.js?v=67",
-          "/js/ui.js": "/js/ui.js?v=67",
-          "/js/analytics.js": "/js/analytics.js?v=67",
-          "/js/colorfield.js": "/js/colorfield.js?v=67",
-          "/js/results.js": "/js/results.js?v=67",
-          "/js/auth.js": "/js/auth.js?v=67",
-          "/js/profile.js": "/js/profile.js?v=67",
-          "/js/settings.js": "/js/settings.js?v=67",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=67",
-          "/js/pro.js": "/js/pro.js?v=67",
-          "/js/archive.js": "/js/archive.js?v=67",
-          "/js/proupsell.js": "/js/proupsell.js?v=67",
-          "/js/billing.js": "/js/billing.js?v=67",
-          "/js/pricing.js": "/js/pricing.js?v=67",
-          "/js/toast.js": "/js/toast.js?v=67",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=67"
+          "/js/main.js": "/js/main.js?v=68",
+          "/js/config.js": "/js/config.js?v=68",
+          "/js/color.js": "/js/color.js?v=68",
+          "/js/dom.js": "/js/dom.js?v=68",
+          "/js/rng.js": "/js/rng.js?v=68",
+          "/js/puzzle.js": "/js/puzzle.js?v=68",
+          "/js/storage.js": "/js/storage.js?v=68",
+          "/js/stats.js": "/js/stats.js?v=68",
+          "/js/game.js": "/js/game.js?v=68",
+          "/js/ui.js": "/js/ui.js?v=68",
+          "/js/analytics.js": "/js/analytics.js?v=68",
+          "/js/colorfield.js": "/js/colorfield.js?v=68",
+          "/js/results.js": "/js/results.js?v=68",
+          "/js/auth.js": "/js/auth.js?v=68",
+          "/js/profile.js": "/js/profile.js?v=68",
+          "/js/settings.js": "/js/settings.js?v=68",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=68",
+          "/js/pro.js": "/js/pro.js?v=68",
+          "/js/archive.js": "/js/archive.js?v=68",
+          "/js/proupsell.js": "/js/proupsell.js?v=68",
+          "/js/billing.js": "/js/billing.js?v=68",
+          "/js/pricing.js": "/js/pricing.js?v=68",
+          "/js/toast.js": "/js/toast.js?v=68",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=68"
         }
       }
     </script>
+    <!-- Floating support widget, bottom-right while playing. Hidden behind modal
+         backdrops (lower z-index) and while multiplayer is open (sibling of #mp). -->
+    <a class="coffee-fab" href="https://buymeacoffee.com/nickreides"
+       target="_blank" rel="noopener" aria-label="Buy me a coffee">
+      <span class="coffee-fab-cup" aria-hidden="true">☕</span>
+      <span class="coffee-fab-label">Buy me a coffee</span>
+    </a>
+
     <script type="module">
       import '/js/main.js';
     </script>

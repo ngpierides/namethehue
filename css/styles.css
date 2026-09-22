@@ -618,10 +618,12 @@ body {
 /* Guest account-creation block on the results screen */
 #results-signup {
   margin: 4px 0 8px;
-  padding: 16px;
-  border: 1px solid var(--correct);
-  border-radius: 12px;
-  background: rgba(47, 125, 79, 0.08);
+  padding: 16px 0 8px;
+}
+/* When no outcome sits above it (stats icon opened by a guest), the box is the
+   first thing in the card - push it clear of the absolutely-placed close X. */
+#results-outcome[hidden] + #results-signup {
+  margin-top: 24px;
 }
 .results-signup-h {
   margin: 0;

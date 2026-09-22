@@ -103,6 +103,9 @@
       .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
       .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .74rem; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
       .seg button.on { background: var(--accent-red); color: #fff; }
+      .mini-select { font: inherit; font-size: .7rem; color: var(--muted); background: var(--panel-2);
+        border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; cursor: pointer;
+        text-transform: none; letter-spacing: normal; }
       .chart-wrap { position: relative; }
       .chart-tip { position: absolute; pointer-events: none; display: none; z-index: 2;
         background: var(--ink); color: var(--panel); font-size: .72rem; padding: 5px 9px;
@@ -152,12 +155,20 @@
 
       <div class="section-label">Traffic</div>
       <div class="grid">
-        <div class="card"><div class="k">Page views</div><div class="v accent" id="pv-total">–</div><div class="sub">all time</div></div>
-        <div class="card"><div class="k">Views · last 24h</div><div class="v" id="pv-24h">–</div><div class="sub" id="pv-30m-sub">– in last 30 min</div></div>
-        <div class="card"><div class="k">Views · last 7 days</div><div class="v" id="pv-7d">–</div><div class="sub">rolling week</div></div>
+        <div class="card">
+          <div class="k" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span>Page views</span>
+            <select id="pv-range" class="mini-select" aria-label="Page views range">
+              <option value="total">All time</option>
+              <option value="24h">Last 24h</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30m">Last 30 min</option>
+            </select>
+          </div>
+          <div class="v accent" id="pv-value">–</div>
+          <div class="sub" id="pv-range-sub">all time</div>
+        </div>
         <div class="card"><div class="k">Human play rate</div><div class="v gold" id="play-rate-human">–</div><div class="sub">games ÷ human views</div></div>
-      </div>
-      <div class="grid">
         <div class="card"><div class="k">Human views</div><div class="v" id="pv-human">–</div><div class="sub" id="pv-human-sub">non-bot user agents</div></div>
         <div class="card"><div class="k">Bot share</div><div class="v gold" id="pv-botpct">–</div><div class="sub">of all page views</div></div>
       </div>
@@ -291,6 +302,21 @@
       const fmtMoney = (minor, cur) =>
         new Intl.NumberFormat('en', { style: 'currency', currency: (cur || 'usd').toUpperCase() }).format((minor || 0) / 100);
 
+      // Page-views card: one number, a native <select> picks the window. All four
+      // windows come from the RPC, so switching is instant (no re-fetch).
+      const PV_RANGES = { total: 'all time', '24h': 'last 24 hours', '7d': 'last 7 days', '30m': 'last 30 minutes' };
+      let pvData = {};
+      function drawPageViews() {
+        if (!drawPageViews.wired) {
+          drawPageViews.wired = true;
+          $('pv-range').addEventListener('change', drawPageViews);
+        }
+        const key = $('pv-range').value;
+        const v = pvData[key];
+        $('pv-value').textContent = v == null ? '–' : fmt(v);
+        $('pv-range-sub').textContent = PV_RANGES[key] || '';
+      }
+
       function showSetup(msg) {
         const el = $('setup');
         el.classList.remove('hidden');
@@ -391,11 +417,8 @@
         // a real zero → '0'.
         const pv = (v) => (v == null ? '–' : fmt(v));
         const pvTotal = d.page_views_total;
-        $('pv-total').textContent = pv(pvTotal);
-        $('pv-24h').textContent = pv(d.page_views_24h);
-        $('pv-7d').textContent = pv(d.page_views_7d);
-        $('pv-30m-sub').textContent =
-          d.page_views_30m == null ? 'awaiting page_views migration' : fmt(d.page_views_30m) + ' in last 30 min';
+        pvData = { total: d.page_views_total, '24h': d.page_views_24h, '7d': d.page_views_7d, '30m': d.page_views_30m };
+        drawPageViews();
 
         // Human vs bot split (by user-agent). Rows logged before the migration
         // have no user_agent, so humans + bots can be < total; that's expected.

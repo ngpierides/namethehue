@@ -730,8 +730,8 @@ body {
   gap: 8px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
+  background: #ffdd00; /* Buy Me a Coffee brand yellow */
+  color: #0d0c22;
   font-family: var(--font-ui);
   font-weight: 600;
   font-size: 0.9rem;

@@ -9,7 +9,7 @@ import {
   msUntilNextReset,
   resetZoneNote,
 } from './stats.js';
-import { isConfigured, getSession } from './auth.js';
+import { isConfigured, getSession, signUp } from './auth.js';
 import { escapeHtml, flash } from './dom.js';
 
 export class Results {
@@ -43,11 +43,40 @@ export class Results {
       if (e.key === 'Escape' && !this.el.hidden) this.close();
     });
 
-    // "Log in to save your streak" nudge (shown to guests only).
-    document.getElementById('results-nudge').addEventListener('click', () => {
+    // Inline account-creation form (guests only): the form signs up via auth.js;
+    // "Log in" hands existing users off to the full profile modal.
+    document.getElementById('rs-login').addEventListener('click', () => {
       this.close();
       this.onLoginClick?.();
     });
+    document.getElementById('results-signup-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this._signup();
+    });
+  }
+
+  async _signup() {
+    const q = (id) => document.getElementById(id);
+    const msg = q('rs-msg');
+    const btn = q('results-signup-form').querySelector('button[type="submit"]');
+    const name = q('rs-name').value.trim();
+    const email = q('rs-email').value.trim();
+    const pass = q('rs-pass').value;
+    msg.className = 'auth-msg';
+    msg.textContent = 'Creating account…';
+    btn.disabled = true;
+    try {
+      const { needsConfirmation } = await signUp(email, pass, name);
+      msg.className = 'auth-msg auth-msg--ok';
+      msg.textContent = needsConfirmation
+        ? `Thanks, ${name || 'there'}! Check your email to confirm, then log in.`
+        : 'Account created - your stats are now being saved!';
+    } catch (err) {
+      msg.className = 'auth-msg auth-msg--error';
+      msg.textContent = err?.message || 'Something went wrong.';
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   /** @param {{ game, dayNumber }} ctx */
@@ -120,23 +149,9 @@ export class Results {
     // to free players, so this doubles as the results-screen funnel into Pro.
     document.getElementById('results-archive').hidden = !over;
 
-    // Nudge guests to log in - only when cloud login is available but nobody's
-    // signed in. (Hidden in local-only mode, where there's nothing to log into.)
-    // On a real streak, loss-frame it (the one thing a daily player fears losing);
-    // otherwise fall back to the generic save-your-stats ask.
-    const nudge = document.getElementById('results-nudge');
-    nudge.hidden = !(isConfigured() && !getSession());
-    if (!nudge.hidden) {
-      const strong = nudge.querySelector('.nudge-text strong');
-      const sub = nudge.querySelector('.nudge-sub');
-      if (s.curStreak >= 2) {
-        strong.textContent = `You're on a ${s.curStreak}-day streak`;
-        sub.textContent = 'Create a free account to keep it.';
-      } else {
-        strong.textContent = "Your stats aren't being saved";
-        sub.textContent = 'Save your stats & streak across devices.';
-      }
-    }
+    // Guests get the inline account-creation form instead of the stats above
+    // (hidden in local-only mode, where there's no account to create).
+    document.getElementById('results-signup').hidden = !guest;
   }
 
   async _share(dayNumber, game, btn) {

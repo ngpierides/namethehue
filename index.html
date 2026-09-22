@@ -152,7 +152,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=71" />
+    <link rel="stylesheet" href="css/styles.css?v=72" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8452f'/></svg>"
@@ -419,14 +419,26 @@
 
         <div id="results-outcome" class="results-outcome" hidden></div>
 
-        <button id="results-nudge" class="nudge" type="button" hidden>
-          <span class="nudge-flame" aria-hidden="true">🔥</span>
-          <span class="nudge-text">
-            <strong>Your stats aren't being saved</strong>
-            <span class="nudge-sub">Create a free account to save your stats and streak across devices.</span>
-          </span>
-          <span class="nudge-cta" aria-hidden="true">›</span>
-        </button>
+        <!-- Guests get the account-creation form inline (signed-in players never
+             see this). Reuses the profile auth-form styles. -->
+        <div id="results-signup" hidden>
+          <h3 class="results-signup-h">Your stats aren't being saved</h3>
+          <p class="results-signup-sub">Create an account now to save your stats and streak across every device.</p>
+          <form id="results-signup-form" class="auth-form">
+            <input id="rs-name" class="field" type="text" placeholder="Name"
+                   autocomplete="name" maxlength="40" required />
+            <input id="rs-email" class="field" type="email" placeholder="Email"
+                   autocomplete="email" required />
+            <input id="rs-pass" class="field" type="password" placeholder="Password"
+                   autocomplete="new-password" minlength="6" required />
+            <button type="submit" class="btn btn--primary btn--wide">Create account</button>
+            <p id="rs-msg" class="auth-msg" role="alert"></p>
+            <p class="auth-switch">
+              Already have an account?
+              <button type="button" id="rs-login" class="linkbtn">Log in</button>
+            </p>
+          </form>
+        </div>
 
         <!-- Stats + distribution: shown only to signed-in players (and in
              local-only mode). Signed-out guests get the account-creation nudge
@@ -616,30 +628,30 @@
     <script type="importmap">
       {
         "imports": {
-          "/js/main.js": "/js/main.js?v=71",
-          "/js/config.js": "/js/config.js?v=71",
-          "/js/color.js": "/js/color.js?v=71",
-          "/js/dom.js": "/js/dom.js?v=71",
-          "/js/rng.js": "/js/rng.js?v=71",
-          "/js/puzzle.js": "/js/puzzle.js?v=71",
-          "/js/storage.js": "/js/storage.js?v=71",
-          "/js/stats.js": "/js/stats.js?v=71",
-          "/js/game.js": "/js/game.js?v=71",
-          "/js/ui.js": "/js/ui.js?v=71",
-          "/js/analytics.js": "/js/analytics.js?v=71",
-          "/js/colorfield.js": "/js/colorfield.js?v=71",
-          "/js/results.js": "/js/results.js?v=71",
-          "/js/auth.js": "/js/auth.js?v=71",
-          "/js/profile.js": "/js/profile.js?v=71",
-          "/js/settings.js": "/js/settings.js?v=71",
-          "/js/multiplayer.js": "/js/multiplayer.js?v=71",
-          "/js/pro.js": "/js/pro.js?v=71",
-          "/js/archive.js": "/js/archive.js?v=71",
-          "/js/proupsell.js": "/js/proupsell.js?v=71",
-          "/js/billing.js": "/js/billing.js?v=71",
-          "/js/pricing.js": "/js/pricing.js?v=71",
-          "/js/toast.js": "/js/toast.js?v=71",
-          "/js/supabase-config.js": "/js/supabase-config.js?v=71"
+          "/js/main.js": "/js/main.js?v=72",
+          "/js/config.js": "/js/config.js?v=72",
+          "/js/color.js": "/js/color.js?v=72",
+          "/js/dom.js": "/js/dom.js?v=72",
+          "/js/rng.js": "/js/rng.js?v=72",
+          "/js/puzzle.js": "/js/puzzle.js?v=72",
+          "/js/storage.js": "/js/storage.js?v=72",
+          "/js/stats.js": "/js/stats.js?v=72",
+          "/js/game.js": "/js/game.js?v=72",
+          "/js/ui.js": "/js/ui.js?v=72",
+          "/js/analytics.js": "/js/analytics.js?v=72",
+          "/js/colorfield.js": "/js/colorfield.js?v=72",
+          "/js/results.js": "/js/results.js?v=72",
+          "/js/auth.js": "/js/auth.js?v=72",
+          "/js/profile.js": "/js/profile.js?v=72",
+          "/js/settings.js": "/js/settings.js?v=72",
+          "/js/multiplayer.js": "/js/multiplayer.js?v=72",
+          "/js/pro.js": "/js/pro.js?v=72",
+          "/js/archive.js": "/js/archive.js?v=72",
+          "/js/proupsell.js": "/js/proupsell.js?v=72",
+          "/js/billing.js": "/js/billing.js?v=72",
+          "/js/pricing.js": "/js/pricing.js?v=72",
+          "/js/toast.js": "/js/toast.js?v=72",
+          "/js/supabase-config.js": "/js/supabase-config.js?v=72"
         }
       }
     </script>

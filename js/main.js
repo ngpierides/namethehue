@@ -66,9 +66,10 @@ async function main() {
   const mp = new Multiplayer({ dataset, todayHex });
   document.getElementById('mp-btn').addEventListener('click', () => mp.open());
 
-  // The guest nudge on the results screen opens the login modal.
+  // The results screen has an inline sign-up form for guests; its "Log in" link
+  // opens the profile modal in login mode.
   const results = new Results({
-    onLoginClick: () => profile.open('signup'), // post-game nudge → ready to create an account
+    onLoginClick: () => profile.open('login'), // "Log in" link under the inline sign-up form
     onChallengeClick: () => mp.open(),
     onArchiveClick: () => archive.open({ today, current }),
   });

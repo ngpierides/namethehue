@@ -16,6 +16,16 @@ let client = null;
 let session = null;
 let handlers = {};
 let syncTimer = null;
+let authReady = false; // false until the first session restore resolves
+
+/**
+ * True once we actually know the auth state (session restored or confirmed
+ * none). Until then a configured app doesn't yet know if someone's signed in,
+ * so UIs should show a loading state rather than assume signed-out.
+ */
+export function isAuthReady() {
+  return authReady;
+}
 
 /** Have real Supabase credentials been filled in? */
 export function isConfigured() {
@@ -56,12 +66,14 @@ export async function getSupabaseClient() {
 export async function initAuth(h = {}) {
   handlers = h;
   if (!isConfigured()) {
+    authReady = true;
     h.onAuth?.(null); // local-only mode
     return;
   }
   client = await getSupabaseClient();
   if (!client) {
     console.warn('[Name the Hue] Supabase unavailable - running local-only.');
+    authReady = true;
     h.onAuth?.(null);
     return;
   }
@@ -76,6 +88,7 @@ export async function initAuth(h = {}) {
 
 async function handleSession(s) {
   session = s;
+  authReady = true; // we now know the real auth state
   setStatsPersist(!!s); // stats are saved to the browser only while signed in
   if (s) await syncOnLogin();
   else applyEntitlement(null); // configured but signed out ⇒ free tier

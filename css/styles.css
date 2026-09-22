@@ -498,6 +498,12 @@ body {
 .btn--primary:hover {
   filter: brightness(1.15);
 }
+/* Guest "Create account" CTA in the accent, to sit with the page's vermilion. */
+#results-signup-form .btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 .btn--wide {
   width: 100%;
   margin-top: 16px;

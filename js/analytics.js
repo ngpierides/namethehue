@@ -2,7 +2,7 @@
 // Fire-and-forget ANONYMOUS gameplay telemetry: one row per completed game into
 // the Supabase `game_events` table, so total games played + solve stats can be
 // counted across ALL players (logged in or not). No personal data and no user
-// id is stored — just day / guesses / par / mode. No-ops entirely when Supabase
+// id is stored, just day / guesses / par / mode. No-ops entirely when Supabase
 // isn't configured, and it must never throw into gameplay. The table + its
 // insert-only RLS policy live in SUPABASE_SETUP.md.
 //
@@ -12,7 +12,7 @@
 import { getSupabaseClient, getSession, isConfigured } from './auth.js';
 
 /**
- * Record one completed game. Best-effort — failures are swallowed so telemetry
+ * Record one completed game. Best-effort. Failures are swallowed so telemetry
  * can never affect the player. Not awaited by callers.
  * @param {{day:number, guesses:number, par:number, mode:'grid'|'hard'}} e
  */
@@ -53,9 +53,9 @@ function referrerLabel() {
 }
 
 /**
- * Record one page view. Best-effort, fire-and-forget — call once per page load.
+ * Record one page view. Best-effort, fire-and-forget, call once per page load.
  * Stores a timestamp, the path, the user-agent (so the dashboard can separate
- * bots from humans), and a coarse referrer label — no cookies, no user id, no
+ * bots from humans), and a coarse referrer label, no cookies, no user id, no
  * IP, and never the query string (room codes / ?day previews stay out).
  */
 export async function logPageView() {

@@ -46,7 +46,7 @@ export class Profile {
     if (!isConfigured()) this._renderLocalOnly();
     else if (session) this._renderAccount(session);
     // Configured but auth hasn't resolved yet: don't flash the login form when
-    // the player is actually signed in — show a loader; refresh() repaints once
+    // the player is actually signed in, so show a loader; refresh() repaints once
     // handleSession fires (main.js wires onAuth → profile.refresh).
     else if (!isAuthReady()) this._renderLoading();
     else this._renderAuthForm();

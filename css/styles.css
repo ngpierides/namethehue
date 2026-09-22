@@ -1,4 +1,4 @@
-/* styles.css — Name the Hue
+/* styles.css - Name the Hue
    A warm "gallery placard" aesthetic: paper ground, ink type, colour swatches
    as the exhibits. Typographic, restrained, intentionally not a dark dashboard. */
 
@@ -20,7 +20,7 @@
   --font-ui: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Dark theme — the same tokens, dark values. Everything reads these tokens, so
+/* Dark theme: the same tokens, dark values. Everything reads these tokens, so
    nothing else needs to change. "System" tracks the OS via prefers-color-scheme
    (unless the player forced light); an explicit choice via [data-theme] wins. */
 @media (prefers-color-scheme: dark) {
@@ -116,7 +116,7 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* display:grid above beats the [hidden] attribute — make hiding explicit
+/* display:grid above beats the [hidden] attribute, so make hiding explicit
    (used to keep the archive button Pro-only). */
 .icon-btn[hidden] {
   display: none;
@@ -1307,7 +1307,7 @@ body {
   color: var(--accent);
 }
 
-/* Grid picks — colour-coded by who claimed the swatch. */
+/* Grid picks, colour-coded by who claimed the swatch. */
 .mp-grid {
   margin-bottom: 6px;
 }

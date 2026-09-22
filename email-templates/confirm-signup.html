@@ -1,12 +1,12 @@
 <!--
-  Name the Hue — "Confirm signup" email.
+  Name the Hue "Confirm signup" email.
 
   Paste this into Supabase:
     Authentication → Emails → select "Confirm signup" → Message body (HTML) → Save.
   Suggested Subject:  Confirm your Name the Hue account
 
   Notes:
-    • Keep the {{ .ConfirmationURL }} placeholders — that's the confirm link.
+    • Keep the {{ .ConfirmationURL }} placeholders, that's the confirm link.
     • Email clients strip <style> tags and custom/Google fonts, so everything is
       inline-styled with system fonts and table layout for maximum compatibility.
     • {{ .Data.display_name }} greets the player by the name they signed up with.

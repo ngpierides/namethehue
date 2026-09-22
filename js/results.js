@@ -113,7 +113,7 @@ export class Results {
       const sub = nudge.querySelector('.nudge-sub');
       if (s.curStreak >= 2) {
         strong.textContent = `You're on a ${s.curStreak}-day streak`;
-        sub.textContent = "Stats aren't saved without an account — create a free one to keep them.";
+        sub.textContent = "Stats aren't saved without an account, so create a free one to keep them.";
       } else {
         strong.textContent = "Your stats aren't being saved";
         sub.textContent = 'Create a free account to save your stats and streak across devices.';

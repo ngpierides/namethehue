@@ -223,7 +223,7 @@
       import { getSupabaseClient } from './js/auth.js';
 
       // Admin gate: any account whose Supabase app_metadata.role = 'admin' may view
-      // this. Grant/revoke admin with the SQL in SUPABASE_SETUP.md (Step 11) — no
+      // this. Grant/revoke admin with the SQL in SUPABASE_SETUP.md (Step 11), no
       // code change, works for as many people as you like.
       const HOME = 'index.html'; // where non-admins are redirected
 
@@ -244,7 +244,7 @@
         const debug = new URLSearchParams(location.search).has('debug');
         const client = await getSupabaseClient();
         if (!client) {
-          if (debug) { reveal(); showSetup('<strong>Debug:</strong> no Supabase client — is <code>js/supabase-config.js</code> filled in?'); return; }
+          if (debug) { reveal(); showSetup('<strong>Debug:</strong> no Supabase client. Is <code>js/supabase-config.js</code> filled in?'); return; }
           location.replace(HOME); return;
         }
         let user = null, err = null;
@@ -255,11 +255,11 @@
         if (debug) {
           reveal();
           showSetup(
-            `<strong>Debug — admin gate</strong><br>` +
+            `<strong>Debug: admin gate</strong><br>` +
             `signed in: <code>${!!user}</code><br>` +
-            `email: <code>${user?.email || '—'}</code><br>` +
+            `email: <code>${user?.email || '–'}</code><br>` +
             `app_metadata: <code>${JSON.stringify(user?.app_metadata || null)}</code><br>` +
-            `role seen: <code>${role ?? '—'}</code><br>` +
+            `role seen: <code>${role ?? '–'}</code><br>` +
             `verdict: <code>${ok ? 'PASS ✅ (admin)' : 'FAIL ❌ (would redirect)'}</code>` +
             (err ? `<br>getUser error: <code>${err.message}</code>` : '')
           );
@@ -297,7 +297,7 @@
         $('hard-n').textContent = fmt(d.hard);
         $('li-n').textContent = fmt(d.logged_in);
         $('anon-n').textContent = fmt(d.anonymous);
-        // Account holders (people) from player_stats — the real answer to "how
+        // Account holders (people) from player_stats, the real answer to "how
         // many players have accounts". '–' until the RPC returns the field.
         $('accounts').textContent = d.accounts == null ? '–' : fmt(d.accounts);
         $('account-games').textContent = d.account_games == null ? '–' : fmt(d.account_games);
@@ -365,7 +365,7 @@
         svg.innerHTML = '';
         const foot = $('line-foot');
         if (rows.length < 2) {
-          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet — play a few games</text>`;
+          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet, play a few games</text>`;
           foot.innerHTML = '';
           return;
         }

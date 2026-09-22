@@ -12,7 +12,7 @@
 //
 // Persistence is ACCOUNT-GATED: stats are saved to the browser (localStorage)
 // only while signed in. Signed-out guests keep their history in memory for the
-// current page session only — it never touches localStorage and is gone on
+// current page session only, it never touches localStorage and is gone on
 // reload. auth.js flips the gate via setStatsPersist() on every session change.
 // The working copy is always the in-memory `mem` object, so a guest's results
 // modal is still coherent right after they solve.
@@ -23,7 +23,7 @@ const STATS_KEY = 'colordle:stats';
 
 // ---- Personal stats (real, from this browser's history) --------------------
 
-let persist = false;   // true only while signed in — the account gate
+let persist = false;   // true only while signed in, the account gate
 let mem = null;        // the single in-memory working copy (lazily seeded)
 
 /**

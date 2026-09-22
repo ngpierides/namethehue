@@ -189,6 +189,19 @@ export async function signOut() {
 }
 
 /**
+ * Best-effort: ask the browser's password manager to save these credentials.
+ * Chromium (Chrome / Android / Google Password Manager) uses this explicitly;
+ * on Safari/iOS Keychain it's a no-op (Safari prompts off the form submit
+ * itself). Feature-detected + swallowed so it can never break sign-in.
+ */
+export async function saveCredential(id, password) {
+  try {
+    if (!window.PasswordCredential || !id || !password) return;
+    await navigator.credentials.store(new window.PasswordCredential({ id, password, name: id }));
+  } catch { /* unsupported, insecure context, or the user declined */ }
+}
+
+/**
  * Permanently delete the signed-in player's account (via the delete-account Edge
  * Function), then sign out locally. The server drops their cloud stats row and
  * cancels any live subscription; signOut() clears the local session + stats copy.

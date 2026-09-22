@@ -11,6 +11,7 @@ import {
   signUp,
   signOut,
   deleteAccount,
+  saveCredential,
 } from './auth.js';
 import { getPersonalStats } from './stats.js';
 import { escapeHtml } from './dom.js';
@@ -132,13 +133,13 @@ export class Profile {
       <form id="auth-form" class="auth-form">
         ${
           signup
-            ? `<input id="auth-name" class="field" type="text" placeholder="Name"
+            ? `<input id="auth-name" class="field" type="text" name="name" placeholder="Name"
                       autocomplete="name" maxlength="40" required />`
             : ''
         }
-        <input id="auth-email" class="field" type="email" placeholder="Email"
-               autocomplete="email" required />
-        <input id="auth-pass" class="field" type="password" placeholder="Password"
+        <input id="auth-email" class="field" type="email" name="username" placeholder="Email"
+               autocomplete="username" required />
+        <input id="auth-pass" class="field" type="password" name="password" placeholder="Password"
                autocomplete="${signup ? 'new-password' : 'current-password'}"
                minlength="6" required />
         <button type="submit" class="btn btn--primary btn--wide">
@@ -172,16 +173,24 @@ export class Profile {
 
     q('#auth-form').addEventListener('submit', (e) => {
       e.preventDefault();
+      // Capture now: a successful sign-in re-renders (removes) the form.
+      const em = email();
+      const pw = pass();
+      const nm = name();
       if (signup) {
         run(async () => {
-          const { needsConfirmation } = await signUp(email(), pass(), name());
+          const { needsConfirmation } = await signUp(em, pw, nm);
+          await saveCredential(em, pw); // offer to save in the password manager
           if (needsConfirmation) {
             msg.className = 'auth-msg auth-msg--ok';
-            msg.textContent = `Thanks, ${name() || 'there'}! Check your email to confirm, then log in.`;
+            msg.textContent = `Thanks, ${nm || 'there'}! Check your email to confirm, then log in.`;
           }
         }, 'Creating account…');
       } else {
-        run(() => signIn(email(), pass()), 'Logging in…');
+        run(async () => {
+          await signIn(em, pw);
+          await saveCredential(em, pw);
+        }, 'Logging in…');
       }
     });
 

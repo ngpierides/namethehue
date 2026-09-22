@@ -9,7 +9,7 @@ import {
   msUntilNextReset,
   resetZoneNote,
 } from './stats.js';
-import { isConfigured, getSession, signUp } from './auth.js';
+import { isConfigured, getSession, signUp, saveCredential } from './auth.js';
 import { escapeHtml, flash } from './dom.js';
 
 export class Results {
@@ -67,6 +67,7 @@ export class Results {
     btn.disabled = true;
     try {
       const { needsConfirmation } = await signUp(email, pass, name);
+      await saveCredential(email, pass); // offer to save in the password manager
       msg.className = 'auth-msg auth-msg--ok';
       msg.textContent = needsConfirmation
         ? `Thanks, ${name || 'there'}! Check your email to confirm, then log in.`

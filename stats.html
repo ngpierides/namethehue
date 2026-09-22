@@ -227,9 +227,14 @@
 
       <div class="panels" style="grid-template-columns:1fr;">
         <div class="panel" style="min-height:auto;">
-          <h2>Top referrers</h2>
-          <p class="desc">Where page views came from. "direct" = typed/bookmarked, "internal" = navigation within the site.</p>
-          <div id="referrers"></div>
+          <div class="chart-head">
+            <div>
+              <h2>Top referrers</h2>
+              <p class="desc" id="ref-desc" style="margin:0;">Where page views came from (all time). "direct" = typed, bookmarked, or referrer-stripped (email, messaging, in-app browsers); "internal" = navigation within the site.</p>
+            </div>
+            <div class="seg" id="ref-views"></div>
+          </div>
+          <div id="referrers" style="margin-top:14px;"></div>
         </div>
       </div>
 
@@ -363,13 +368,40 @@
         drawChart();
         drawDist(d.guess_dist || []);
         drawSplit(d.logged_in || 0, d.anonymous || 0);
-        drawReferrers(d.referrers || []);
+        refSeries.all = d.referrers || [];
+        refSeries.recent = d.referrers_48h || [];
+        drawReferrers();
       }
 
-      function drawReferrers(rows) {
+      // Referrer breakdown, with an all-time / last-48h toggle. 48h is the one that
+      // lets you attribute a live spike (or see it's mostly referrer-less 'direct').
+      const REF_TAIL = ' "direct" = typed, bookmarked, or referrer-stripped (email, messaging, in-app browsers); "internal" = navigation within the site.';
+      const REF_VIEWS = [
+        { k: 'all', label: 'All time', desc: 'Where page views came from (all time).' + REF_TAIL, rows: () => refSeries.all },
+        { k: '48h', label: '48h', desc: 'Where page views came from (last 48 hours).' + REF_TAIL, rows: () => refSeries.recent },
+      ];
+      let refSeries = { all: [], recent: [] };
+      let refView = 'all';
+
+      function drawReferrers() {
+        if (!drawReferrers.wired) {
+          drawReferrers.wired = true;
+          const seg = $('ref-views');
+          seg.innerHTML = REF_VIEWS.map((v) => `<button data-k="${v.k}">${v.label}</button>`).join('');
+          seg.addEventListener('click', (e) => {
+            const b = e.target.closest('button');
+            if (!b) return;
+            refView = b.dataset.k;
+            drawReferrers();
+          });
+        }
+        const view = REF_VIEWS.find((v) => v.k === refView) || REF_VIEWS[0];
+        document.querySelectorAll('#ref-views button').forEach((b) => b.classList.toggle('on', b.dataset.k === refView));
+        $('ref-desc').textContent = view.desc;
+        const rows = view.rows();
         const el = $('referrers');
         if (!rows.length) {
-          el.innerHTML = `<div class="desc">No referrer data yet (awaiting the page_views migration, or no views logged since).</div>`;
+          el.innerHTML = `<div class="desc">No referrer data in this window (awaiting the page_views migration, or no views logged).</div>`;
           return;
         }
         const max = Math.max(...rows.map((r) => r.n), 1);

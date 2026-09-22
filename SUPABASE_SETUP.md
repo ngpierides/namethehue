@@ -666,6 +666,12 @@ begin
     'referrers', (select coalesce(json_agg(json_build_object('ref', ref, 'n', n) order by n desc), '[]'::json)
                    from (select coalesce(nullif(referrer, ''), 'direct') as ref, count(*) as n
                          from page_views group by 1 order by 2 desc limit 10) s),
+    -- Same breakdown but only the last 48h, so a traffic spike can be attributed
+    -- to a source (or shown to be mostly referrer-less 'direct') while it's fresh.
+    'referrers_48h', (select coalesce(json_agg(json_build_object('ref', ref, 'n', n) order by n desc), '[]'::json)
+                       from (select coalesce(nullif(referrer, ''), 'direct') as ref, count(*) as n
+                             from page_views where created_at > now() - interval '48 hours'
+                             group by 1 order by 2 desc limit 10) s),
     -- Games completed SINCE user-agent tracking began (the first UA-logged view),
     -- so "human play rate" divides games and human views over the same window
     -- instead of all-time games ÷ post-migration views (which exceeds 100%).

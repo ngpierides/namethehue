@@ -163,8 +163,12 @@
       <div class="grid">
         <div class="card"><div class="k">Grid games</div><div class="v" id="grid-n">–</div><div class="sub">classic swatch hunt</div></div>
         <div class="card"><div class="k">Hard-mode games</div><div class="v" id="hard-n">–</div><div class="sub">colour mixer</div></div>
-        <div class="card"><div class="k">Logged in</div><div class="v" id="li-n">–</div><div class="sub" id="li-sub">have an account</div></div>
-        <div class="card"><div class="k">Anonymous</div><div class="v" id="anon-n">–</div><div class="sub">no account</div></div>
+        <div class="card"><div class="k">Logged in</div><div class="v" id="li-n">–</div><div class="sub" id="li-sub">games solved signed in</div></div>
+        <div class="card"><div class="k">Anonymous</div><div class="v" id="anon-n">–</div><div class="sub">games solved as guest</div></div>
+      </div>
+      <div class="grid">
+        <div class="card"><div class="k">Account holders</div><div class="v accent" id="accounts">–</div><div class="sub">registered players</div></div>
+        <div class="card"><div class="k">Games by members</div><div class="v" id="account-games">–</div><div class="sub">from synced history</div></div>
       </div>
 
       <div class="panels">
@@ -280,6 +284,10 @@
         $('hard-n').textContent = fmt(d.hard);
         $('li-n').textContent = fmt(d.logged_in);
         $('anon-n').textContent = fmt(d.anonymous);
+        // Account holders (people) from player_stats — the real answer to "how
+        // many players have accounts". '–' until the RPC returns the field.
+        $('accounts').textContent = d.accounts == null ? '–' : fmt(d.accounts);
+        $('account-games').textContent = d.account_games == null ? '–' : fmt(d.account_games);
         const hardPct = total ? Math.round((d.hard / total) * 100) : 0;
         $('hardpct').textContent = hardPct + '%';
         const liPct = total ? Math.round((d.logged_in / total) * 100) : 0;

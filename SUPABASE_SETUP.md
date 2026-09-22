@@ -639,6 +639,12 @@ begin
     'hard',          (select count(*) from game_events where mode = 'hard'),
     'logged_in',     (select count(*) from game_events where logged_in),
     'anonymous',     (select count(*) from game_events where not logged_in),
+    -- Real account holders (people), from player_stats — NOT the per-solve
+    -- logged_in flag on game_events (which stays ~0 because players solve as
+    -- guests, then sign up via the nudge). account_games = games in their
+    -- synced history, which includes guest-played + cross-device days.
+    'accounts',       (select count(*) from player_stats),
+    'account_games',  (select coalesce(sum(games_played), 0) from player_stats),
     'page_views_total', (select count(*) from page_views),
     'page_views_30m',   (select count(*) from page_views where created_at > now() - interval '30 minutes'),
     'page_views_24h',   (select count(*) from page_views where created_at > now() - interval '24 hours'),

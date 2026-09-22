@@ -159,10 +159,10 @@
           <div class="k" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span>Page views</span>
             <select id="pv-range" class="mini-select" aria-label="Page views range">
-              <option value="total">All time</option>
+              <option value="30m">Last 30 min</option>
               <option value="24h">Last 24h</option>
               <option value="7d">Last 7 days</option>
-              <option value="30m">Last 30 min</option>
+              <option value="total" selected>All time</option>
             </select>
           </div>
           <div class="v accent" id="pv-value">–</div>
@@ -175,7 +175,19 @@
 
       <div class="section-label">Overview</div>
       <div class="grid">
-        <div class="card"><div class="k">Games played</div><div class="v accent" id="total">–</div><div class="sub">every completed game</div></div>
+        <div class="card">
+          <div class="k" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span>Games played</span>
+            <select id="gp-range" class="mini-select" aria-label="Games played range">
+              <option value="30m">Last 30 min</option>
+              <option value="24h">Last 24h</option>
+              <option value="7d">Last 7 days</option>
+              <option value="total" selected>All time</option>
+            </select>
+          </div>
+          <div class="v accent" id="gp-value">–</div>
+          <div class="sub" id="gp-range-sub">all time</div>
+        </div>
         <div class="card"><div class="k">Hard mode</div><div class="v gold" id="hardpct">–</div><div class="sub">of all games</div></div>
         <div class="card"><div class="k">Account holders</div><div class="v accent" id="accounts">–</div><div class="sub">registered players</div></div>
         <div class="card"><div class="k">Games by members</div><div class="v" id="account-games">–</div><div class="sub">from synced history</div></div>
@@ -302,20 +314,23 @@
       const fmtMoney = (minor, cur) =>
         new Intl.NumberFormat('en', { style: 'currency', currency: (cur || 'usd').toUpperCase() }).format((minor || 0) / 100);
 
-      // Page-views card: one number, a native <select> picks the window. All four
-      // windows come from the RPC, so switching is instant (no re-fetch).
-      const PV_RANGES = { total: 'all time', '24h': 'last 24 hours', '7d': 'last 7 days', '30m': 'last 30 minutes' };
+      // Range cards (Page views, Game plays): one number + a native <select> that
+      // picks the window. Every window comes from the RPC, so switching is instant.
+      const RANGE_LABELS = { '30m': 'last 30 minutes', '24h': 'last 24 hours', '7d': 'last 7 days', total: 'all time' };
       let pvData = {};
-      function drawPageViews() {
-        if (!drawPageViews.wired) {
-          drawPageViews.wired = true;
-          $('pv-range').addEventListener('change', drawPageViews);
+      let gpData = {};
+      function makeRangeCard(selId, valId, subId, getData) {
+        function draw() {
+          if (!draw.wired) { draw.wired = true; $(selId).addEventListener('change', draw); }
+          const key = $(selId).value;
+          const v = getData()[key];
+          $(valId).textContent = v == null ? '–' : fmt(v);
+          $(subId).textContent = RANGE_LABELS[key] || '';
         }
-        const key = $('pv-range').value;
-        const v = pvData[key];
-        $('pv-value').textContent = v == null ? '–' : fmt(v);
-        $('pv-range-sub').textContent = PV_RANGES[key] || '';
+        return draw;
       }
+      const drawPageViews = makeRangeCard('pv-range', 'pv-value', 'pv-range-sub', () => pvData);
+      const drawGamePlays = makeRangeCard('gp-range', 'gp-value', 'gp-range-sub', () => gpData);
 
       function showSetup(msg) {
         const el = $('setup');
@@ -401,7 +416,8 @@
         $('live-30m').textContent = fmt(d.games_30m);
         $('pill-24h').textContent = fmt(d.games_24h);
         $('pill-7d').textContent = fmt(d.games_7d);
-        $('total').textContent = fmt(total);
+        gpData = { total: d.total_games, '24h': d.games_24h, '7d': d.games_7d, '30m': d.games_30m };
+        drawGamePlays();
         // Account holders (people) from player_stats — the real answer to "how many
         // players have accounts". '–' until the RPC returns the field.
         $('accounts').textContent = d.accounts == null ? '–' : fmt(d.accounts);

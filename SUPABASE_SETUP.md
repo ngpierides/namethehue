@@ -645,6 +645,14 @@ begin
     -- synced history, which includes guest-played + cross-device days.
     'accounts',       (select count(*) from player_stats),
     'account_games',  (select coalesce(sum(games_played), 0) from player_stats),
+    -- Pro membership breakdown (revenue-bearing = 'paid' with a live period;
+    -- comp/admin are free grants). Mirrors applyEntitlement() in pro.js. Exact
+    -- $ isn't derivable here — the plan/amount isn't stored per member; add it
+    -- to the Stripe webhook, or a get-revenue Edge Function, for real dollars.
+    'members_paid',  (select count(*) from player_stats
+                      where pro_source = 'paid' and pro_current_period_end > now()),
+    'members_comp',  (select count(*) from player_stats where pro_source = 'comp'),
+    'members_admin', (select count(*) from player_stats where pro_source = 'admin'),
     'page_views_total', (select count(*) from page_views),
     'page_views_30m',   (select count(*) from page_views where created_at > now() - interval '30 minutes'),
     'page_views_24h',   (select count(*) from page_views where created_at > now() - interval '24 hours'),

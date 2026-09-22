@@ -171,6 +171,19 @@
         <div class="card"><div class="k">Games by members</div><div class="v" id="account-games">–</div><div class="sub">from synced history</div></div>
       </div>
 
+      <div class="section-label">Supporters &amp; revenue</div>
+      <div class="grid">
+        <div class="card"><div class="k">Paying members</div><div class="v accent" id="mem-paid">–</div><div class="sub">active Pro subscriptions</div></div>
+        <div class="card"><div class="k">Comped</div><div class="v" id="mem-comp">–</div><div class="sub">free Pro grants</div></div>
+        <div class="card"><div class="k">Staff / admin</div><div class="v" id="mem-admin">–</div><div class="sub">admin accounts</div></div>
+        <div class="card"><div class="k">Buy Me a Coffee</div><div class="v" id="bmc">n/a</div><div class="sub">not connected yet</div></div>
+      </div>
+      <p class="desc" style="margin:-6px 0 20px;">
+        Exact revenue ($) isn't shown: the plan/amount isn't stored per member. Wire it up by
+        recording the Stripe amount in the webhook, or a <code>get-revenue</code> Edge Function.
+        Buy Me a Coffee needs a webhook/API token to go live.
+      </p>
+
       <div class="panels">
         <div class="panel">
           <h2>Games per day</h2>
@@ -288,6 +301,10 @@
         // many players have accounts". '–' until the RPC returns the field.
         $('accounts').textContent = d.accounts == null ? '–' : fmt(d.accounts);
         $('account-games').textContent = d.account_games == null ? '–' : fmt(d.account_games);
+        // Pro membership breakdown (live from player_stats; BMC + exact $ not wired).
+        $('mem-paid').textContent = d.members_paid == null ? '–' : fmt(d.members_paid);
+        $('mem-comp').textContent = d.members_comp == null ? '–' : fmt(d.members_comp);
+        $('mem-admin').textContent = d.members_admin == null ? '–' : fmt(d.members_admin);
         const hardPct = total ? Math.round((d.hard / total) * 100) : 0;
         $('hardpct').textContent = hardPct + '%';
         const liPct = total ? Math.round((d.logged_in / total) * 100) : 0;

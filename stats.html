@@ -98,6 +98,17 @@
       .panel h2 { font-size: 1.15rem; margin: 0 0 4px; font-weight: 600; }
       .panel .desc { color: var(--muted); font-size: .82rem; margin: 0 0 18px; }
       .chart { width: 100%; height: 190px; display: block; }
+      .chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .chart-head h2 { margin: 0 0 4px; }
+      .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+      .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .74rem; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+      .seg button.on { background: var(--accent-red); color: #fff; }
+      .chart-wrap { position: relative; }
+      .chart-tip { position: absolute; pointer-events: none; display: none; z-index: 2;
+        background: var(--ink); color: var(--panel); font-size: .72rem; padding: 5px 9px;
+        border-radius: 8px; white-space: nowrap; transform: translate(-50%, -128%); box-shadow: var(--shadow); }
+      .chart-tip::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+        border: 5px solid transparent; border-top-color: var(--ink); }
       .bars { display: flex; flex-direction: column; gap: 9px; }
       .bar-row { display: grid; grid-template-columns: 22px 1fr 34px; align-items: center; gap: 10px; font-size: .82rem; }
       .bar-track { background: var(--panel-2); border-radius: 6px; height: 20px; overflow: hidden; }
@@ -186,9 +197,17 @@
 
       <div class="panels">
         <div class="panel">
-          <h2>Games per day</h2>
-          <p class="desc">Completed games over the last 28 days.</p>
-          <svg class="chart" id="line" viewBox="0 0 600 190" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="chart-head">
+            <div>
+              <h2>Games over time</h2>
+              <p class="desc" id="chart-desc" style="margin:0;">Completed games, hour by hour (last 24h).</p>
+            </div>
+            <div class="seg" id="chart-views"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg class="chart" id="line" viewBox="0 0 600 190" preserveAspectRatio="none" aria-hidden="true" style="margin-top:14px;"></svg>
+            <div class="chart-tip" id="chart-tip"></div>
+          </div>
           <div class="desc" id="line-foot" style="display:flex;justify-content:space-between;margin-top:6px;"></div>
         </div>
         <div class="panel">
@@ -339,7 +358,9 @@
         $('play-rate-human').textContent =
           humans && gamesSince != null ? Math.round((gamesSince / humans) * 100) + '%' : '–';
 
-        drawLine(d.per_day || []);
+        chartSeries.hour = d.per_hour || [];
+        chartSeries.day = d.per_day || [];
+        drawChart();
         drawDist(d.guess_dist || []);
         drawSplit(d.logged_in || 0, d.anonymous || 0);
         drawReferrers(d.referrers || []);
@@ -360,20 +381,60 @@
           </div>`).join('');
       }
 
-      function drawLine(rows) {
+      // Games-over-time chart. Two series come from the RPC — per_hour (48 zero-
+      // filled hourly buckets) and per_day (28 daily) — and the view buttons just
+      // slice one of them, so switching views is instant with no re-fetch.
+      const VIEWS = [
+        { k: '24h', label: '24h', desc: 'Completed games, hour by hour (last 24h).', rows: () => chartSeries.hour.slice(-24) },
+        { k: '48h', label: '48h', desc: 'Completed games, hour by hour (last 48h).', rows: () => chartSeries.hour.slice(-48) },
+        { k: '7d',  label: '7d',  desc: 'Completed games per day (last 7 days).',     rows: () => chartSeries.day.slice(-7) },
+        { k: '28d', label: '28d', desc: 'Completed games per day (last 28 days).',    rows: () => chartSeries.day },
+      ];
+      let chartSeries = { hour: [], day: [] };
+      let chartView = '24h';
+      let chartRows = [];
+      let chartXY = null;
+      const CHART_H = 190;
+
+      function initChart() {
+        if (initChart.done) return;
+        initChart.done = true;
+        const el = $('chart-views');
+        el.innerHTML = VIEWS.map((v) => `<button data-k="${v.k}">${v.label}</button>`).join('');
+        el.addEventListener('click', (e) => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          chartView = b.dataset.k;
+          drawChart();
+        });
         const svg = $('line');
-        svg.innerHTML = '';
+        svg.addEventListener('pointermove', chartMove);
+        svg.addEventListener('pointerleave', chartLeave);
+      }
+
+      function drawChart() {
+        initChart();
+        const view = VIEWS.find((v) => v.k === chartView) || VIEWS[0];
+        document.querySelectorAll('#chart-views button').forEach((b) => b.classList.toggle('on', b.dataset.k === chartView));
+        $('chart-desc').textContent = view.desc;
+        const rows = view.rows();
+        chartRows = rows;
+        const svg = $('line');
         const foot = $('line-foot');
+        chartLeave();
+        svg.innerHTML = '';
         if (rows.length < 2) {
-          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet, play a few games</text>`;
+          svg.innerHTML = `<text x="300" y="95" fill="#a49a88" font-size="13" text-anchor="middle" font-family="Space Grotesk">Not enough data yet for this range</text>`;
           foot.innerHTML = '';
+          chartXY = null;
           return;
         }
-        const W = 600, H = 190, pad = 10;
+        const W = 600, H = CHART_H, pad = 10;
         const ns = rows.map((r) => r.n);
         const max = Math.max(...ns, 1);
         const x = (i) => pad + (i * (W - pad * 2)) / (rows.length - 1);
         const y = (v) => H - pad - (v / max) * (H - pad * 2);
+        chartXY = { x, y };
         const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.n).toFixed(1)}`).join(' ');
         const area = `${line} L${x(rows.length - 1).toFixed(1)},${H - pad} L${x(0).toFixed(1)},${H - pad} Z`;
         const peakIdx = ns.indexOf(max);
@@ -384,9 +445,40 @@
           </linearGradient></defs>
           <path d="${area}" fill="url(#fill)"/>
           <path d="${line}" fill="none" stroke="#c0472d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <line id="hv-line" x1="0" y1="${pad}" x2="0" y2="${H - pad}" stroke="#c0472d" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+          <circle id="hv-dot" r="3.5" fill="#c0472d" opacity="0"/>
           <circle cx="${x(peakIdx).toFixed(1)}" cy="${y(max).toFixed(1)}" r="3.5" fill="#c0472d"/>`;
-        const d0 = rows[0].d, d1 = rows[rows.length - 1].d;
-        foot.innerHTML = `<span>${d0}</span><span>peak ${max}</span><span>${d1}</span>`;
+        foot.innerHTML = `<span>${rows[0].d}</span><span>peak ${max}</span><span>${rows[rows.length - 1].d}</span>`;
+      }
+
+      // Hover: nearest point by x-fraction (works despite preserveAspectRatio="none",
+      // which stretches viewBox units, so we map from the on-screen bounding rect).
+      function chartMove(e) {
+        if (!chartXY || chartRows.length < 2) return;
+        const svg = $('line');
+        const rect = svg.getBoundingClientRect();
+        const t = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const i = Math.round(t * (chartRows.length - 1));
+        const r = chartRows[i];
+        if (!r) return;
+        const vx = chartXY.x(i), vy = chartXY.y(r.n);
+        const hl = svg.querySelector('#hv-line'), hd = svg.querySelector('#hv-dot');
+        if (hl) { hl.setAttribute('x1', vx); hl.setAttribute('x2', vx); hl.setAttribute('opacity', '.5'); }
+        if (hd) { hd.setAttribute('cx', vx); hd.setAttribute('cy', vy); hd.setAttribute('opacity', '1'); }
+        const tip = $('chart-tip');
+        const wrap = svg.parentElement.getBoundingClientRect();
+        tip.style.left = (rect.left - wrap.left + rect.width * (i / (chartRows.length - 1))) + 'px';
+        tip.style.top = (rect.top - wrap.top + rect.height * (vy / CHART_H)) + 'px';
+        tip.textContent = `${r.d} · ${fmt(r.n)} game${r.n === 1 ? '' : 's'}`;
+        tip.style.display = 'block';
+      }
+
+      function chartLeave() {
+        const svg = $('line');
+        const hl = svg.querySelector('#hv-line'), hd = svg.querySelector('#hv-dot'), tip = $('chart-tip');
+        if (hl) hl.setAttribute('opacity', '0');
+        if (hd) hd.setAttribute('opacity', '0');
+        if (tip) tip.style.display = 'none';
       }
 
       function drawDist(rows) {

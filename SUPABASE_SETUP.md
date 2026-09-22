@@ -672,6 +672,16 @@ begin
     'games_since_tracking', (select count(*) from game_events
                              where created_at >= (select min(created_at) from page_views
                                                   where user_agent is not null)),
+    -- Hourly buckets for the last 48h, zero-FILLED (generate_series left join) so
+    -- an hour with no games shows as 0 instead of vanishing — the dashboard's
+    -- 24h/48h chart views read this; per_day (below) drives the 7d/28d views.
+    'per_hour', (select coalesce(json_agg(json_build_object('d', to_char(h, 'MM/DD HH24:00'), 'n', n) order by h), '[]'::json)
+                  from (select gs as h, coalesce(c.n, 0) as n
+                        from generate_series(date_trunc('hour', now()) - interval '47 hours',
+                                             date_trunc('hour', now()), interval '1 hour') gs
+                        left join (select date_trunc('hour', created_at) as hh, count(*) as n
+                                   from game_events where created_at > now() - interval '48 hours'
+                                   group by 1) c on c.hh = gs) s),
     'per_day', (select coalesce(json_agg(json_build_object('d', to_char(d, 'MM/DD'), 'n', n) order by d), '[]'::json)
                  from (select date_trunc('day', created_at)::date as d, count(*) as n
                        from game_events where created_at > now() - interval '28 days'
